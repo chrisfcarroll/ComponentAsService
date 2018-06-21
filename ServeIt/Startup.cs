@@ -36,39 +36,6 @@ namespace ServeIt
             }
 
             app.UseMvc();
-            app.UseServeIt();            
-        }
-    }
-
-    public static class ServeItStartUpExtensions
-    {
-        static string regexIdentifierU =
-            @"^_?(\p{Lu}|\p{Ll}|\p{Lt}|\p{Lm}|\p{Lo}|\p{Nl}|\p{Mn}|\p{Mc}|\p{Nd}|\p{Pc})+$"
-               .Replace("{", "{{")
-               .Replace("}", "}}");
-
-        public static string regexIdentifier = "^_?[A-Za-z_0-9]+$";
-
-        public static void UseServeIt(this IApplicationBuilder app)
-        {
-            var serveItRouteHandler = 
-                new RouteHandler(
-                     context =>
-                     {
-                         var routeValues = context.GetRouteData().Values;
-                         return context.Response.WriteAsync( JsonConvert.SerializeObject(routeValues)  );
-                     });
-            
-            var routes = 
-                new RouteBuilder(app, serveItRouteHandler)
-                    .MapRoute(
-                      "ServeIt component/method/...parameters Route",
-                      $@"{{component:regex({regexIdentifier})}}/{{method:regex({regexIdentifier})}}/{{*params}}"
-                     )
-                   .Build();
-            
-            app.UseRouter(routes);
-            
         }
     }
 }
