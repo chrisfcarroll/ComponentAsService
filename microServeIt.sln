@@ -2,9 +2,9 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example", "Example\Example.csproj", "{7FC43303-FA01-4C4B-B0AF-ABA73817387E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServeIt", "ServeIt\ServeIt.csproj", "{B1458327-48F6-498E-8C99-0A4BB74C48C4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "microServeIt", "microServeIt\microServeIt.csproj", "{B1458327-48F6-498E-8C99-0A4BB74C48C4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServeIt.Tests", "ServeIt.Tests\ServeIt.Tests.csproj", "{C9FA1A3F-2378-4B4D-B6A5-573FD437D439}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "microServeIt.Tests", "microServeIt.Tests\microServeIt.Tests.csproj", "{C9FA1A3F-2378-4B4D-B6A5-573FD437D439}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

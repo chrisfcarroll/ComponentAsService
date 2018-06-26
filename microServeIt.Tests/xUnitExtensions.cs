@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using Xunit.Abstractions;
 
-namespace ServeIt.Tests
+namespace microServeIt.Tests
 {
     public static class XUnitExtensions
     {
