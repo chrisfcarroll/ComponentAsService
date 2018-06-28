@@ -9,7 +9,7 @@ namespace microServeIt
 
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                   .UseStartup<Startup>()
+                   .UseStartup<WhiteBoxStartup>()
                    .Build();
     }
 }

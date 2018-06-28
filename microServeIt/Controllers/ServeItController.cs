@@ -21,23 +21,28 @@ namespace microServeIt.Controllers
         
         public object Serve()
         {
-            return Debug();
-        }
+            logger.LogDebug("ActionDescriptor {ActionDescriptor}", ControllerContext.ActionDescriptor);
+            logger.LogDebug("RouteData {RouteData}", ControllerContext.RouteData);
+            logger.LogDebug("ControllerContext {ControllerContext}", ControllerContext);
 
-        public object Debug()
-        {
-            var debug = serviceProvider.GetService<IDebugServeIt>();
-            if (!methods.TryGetValue((debug.GetType(), nameof(IDebugServeIt.Method)), out MethodInfo method))
-            {
-                method = debug.GetType().GetMethod(nameof(IDebugServeIt.Method)) ;
-                methods[(debug.GetType(), nameof(IDebugServeIt.Method))]= method;
-            };
-            var query = Request.Query.ToDictionary(q=>q.Key, q=> (object)string.Join(",",q.Value));
-            var values= RouteData.Values;
-            var args = values.Union(query).ToDictionary(kv=>kv.Key, kv=>kv.Value);
+            var query   = Request.Query.ToDictionary(q => q.Key, q => (object)string.Join(",", q.Value));
+            var values  = RouteData.Values;
+            var args    = values.Union(query).ToDictionary(kv => kv.Key, kv => kv.Value);
+            var service = RouteData.Values["service"] as string;
+            var methodName  = RouteData.Values["method"] as string;
+            var knownServices= serviceProvider;
+            var typeFromService= Type.GetType(service);
+            var method = typeFromService
+                              .GetMethods()
+                              .Where( m=>m.Name == methodName)
+                              .Where( m=>m.GetParameters().Select(p=>p.Name).All(n=> args.ContainsKey(n)) )
+                              .OrderByDescending(m=>m.GetParameters().Count())
+                              .FirstOrDefault();
+
+            methodsCache[(typeFromService.GetType(), nameof(ITestServeIt.GetParameters))]= method;
             try
             {
-                var result = method.Invoke(debug, new object[]{args});
+                var result = method.Invoke(typeFromService, new object[]{args});
                 return result;
             }
             catch (Exception e)
@@ -47,6 +52,6 @@ namespace microServeIt.Controllers
             }
         }
         
-        static Dictionary<(Type,string),MethodInfo> methods= new Dictionary<(Type, string), MethodInfo>();
+        static Dictionary<(Type,string),MethodInfo> methodsCache= new Dictionary<(Type, string), MethodInfo>();
     }
 }

@@ -1,12 +1,8 @@
 using System;
-using System.Net.Http;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
 using TestBase;
 using Xunit;
 using Xunit.Abstractions;
@@ -20,7 +16,7 @@ namespace microServeIt.Tests
         public ServeItStartupFacts(ITestOutputHelper console) => this.console = console;
 
         [Fact]
-        public void UseServeIt_ExplainsIfMvcIsMissing()
+        public void Method_UseServeIt_ThrowsExplanationIfMvcServiceIsNotFound()
         {
             Assert.ThrowsAny<Exception>( ()=> GivenClientForRunningServer<StartupMissingMvc>())
                   .Message

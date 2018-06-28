@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using microServeIt.Controllers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.Internal;
 using Microsoft.AspNetCore.Routing;
@@ -8,26 +7,19 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace microServeIt
 {
-    public interface IDebugServeIt { Dictionary<string, object> Method(Dictionary<string,object> args); }
-    
-    public class DebugServeItService : IDebugServeIt
-    {
-        public Dictionary<string, object> Method(Dictionary<string, object> args) => args;
-    }
-    
     public static class ServeItStartUpExtensions
     {
         /// <summary>
-        /// Maps a Route for <see cref="ServeItController/>.<see cref="ServeItController.Serve"/> action, so that ServeIt can handle incoming requests,
-        /// and adds the route to <paramref name="app"/>
+        /// Adds a Route mapping to <paramref name="app"/> for <see cref="ServeItController/>.<see cref="ServeItController.Serve"/> action, 
+        /// so that ServeIt can handle incoming requests.
         /// </summary>
         /// <param name="app">the application Builder you are building</param>
         /// <param name="routeName">The name for ServeIt's route.</param>
         /// <param name="routeTemplate">The route template which ServeIt will match.</param>
         /// <param name="defaults">The defaults for the route used by ServeIt.
-        /// By default, this is <code>new {controller="ServeIt", action="Serve"}</code>
-        /// If you override this, you must still include the defaults
-        /// <code>controller="ServeIt", action="Serve"</code>, otherwise your route will not be served by ServeIt</param>
+        /// By default, this is <code>new {controller="ServeIt", action="Serve"}</code>. If you override this, you must still include the 
+        /// defaults for <code>controller="ServeIt", action="Serve"</code>, otherwise your route will not be served by ServeIt
+        /// </param>
         /// <param name="constraints">The constraints for the route used by ServeIt.
         ///By default this is:
         /// <code>new {
