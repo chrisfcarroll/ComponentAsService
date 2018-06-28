@@ -24,6 +24,7 @@ namespace microServeIt
             services.AddLogging();
             services.AddScoped<ITestServeIt,TestServeIt>();
             services.AddScoped<TestServeItB>();
+            services.AddSingleton(services);
             Services = services;
         }
 

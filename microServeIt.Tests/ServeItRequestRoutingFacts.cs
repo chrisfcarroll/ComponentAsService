@@ -50,18 +50,18 @@ namespace microServeIt.Tests
             paramDict.ShouldAll(kv => dictionaryResult[kv.Key].ShouldBe(  $"{kv.Value}"));
         }
 
-        [Theory]
-        [InlineData("a1", "b2")]
-        public async Task ServeItController_FindsAnyRegisteredService(string a, string b)
+        [Fact]
+        public async Task ServeItController_CanSelectAMethodByParameterName()
         {
-            var httpResult = await client.GetAsync($"{nameof(TestServeItB)}/{nameof(TestServeItB.ReturnParameters)}?a=p1&b=p2");
+            string p1 = "p1!";
+            int p2 = 2;
+            var httpResult = await client.GetAsync($"{nameof(ITestServeIt)}/{nameof(ITestServeIt.GetParameters)}?a={p1}&b={p2}");
             var stringResult = await httpResult.Content.ReadAsStringAsync();
             console.QuoteLine(stringResult);
             var result = JsonConvert.DeserializeObject<(string,string)>(stringResult);
 
-            result.Item1.ShouldBe(a);
-            result.Item2.ShouldBe(b);
-
+            result.Item1.ShouldBe( p1.ToString());
+            result.Item2.ShouldBe( p2.ToString());
         }
 
         public ServeItRequestRoutingFacts(ITestOutputHelper console)
