@@ -17,7 +17,7 @@ namespace microServeIt.Tests
         readonly ITestOutputHelper console;
 
         [Theory]
-        [InlineData(nameof(ITestServeIt),nameof(ITestServeIt.ShowRouteValues))]
+        [InlineData(nameof(IServeItDiagnostics),nameof(IServeItDiagnostics.ShowRouteValues))]
         public async Task ServeItController_IdentifiesServiceAndMethodFromRoute(string serviceName, string methodName)
         {
             var httpResult= await client.GetAsync($"{serviceName}/{methodName}?name=input&number=2");
@@ -30,7 +30,7 @@ namespace microServeIt.Tests
         }
         
         [Theory]
-        [InlineData(nameof(ITestServeIt),nameof(ITestServeIt.ShowRouteValues))]
+        [InlineData(nameof(IServeItDiagnostics),nameof(IServeItDiagnostics.ShowRouteValues))]
         public async Task ServeItController_TreatsSpecialParameterNameForAllMvcRouteValuesSpecially(string serviceName, string methodName)
         {
             var httpResult= await client.GetAsync($"{serviceName}/{methodName}?name=input&number=2");
@@ -50,7 +50,7 @@ namespace microServeIt.Tests
 
         
         [Theory]
-        [InlineData(nameof(ITestServeIt),nameof(ITestServeIt.ShowRouteValues), "p1", "p1", "p2",2, "p3",3)]
+        [InlineData(nameof(IServeItDiagnostics),nameof(IServeItDiagnostics.ShowRouteValues), "p1", "p1", "p2",2, "p3",3)]
         public async Task ServeItController_GetsDictionaryKeyParametersFromQueryString(string serviceName, string methodName, params object[] data)
         {
             var paramDict= new Dictionary<string,object>();
@@ -70,7 +70,7 @@ namespace microServeIt.Tests
         }
 
         [Theory]
-        [InlineData(nameof(ITestServeIt),nameof(ITestServeIt.GetParameters), "a", "b", "c")]
+        [InlineData(nameof(IServeItDiagnostics),nameof(IServeItDiagnostics.GetParameters), "a", "b", "c")]
         public async Task ServeItController_IdentifiesNamedParametersFromQueryString(string serviceName, string methodName, string a, string b, string c)
         {
             var httpResult= await client.GetAsync($"{serviceName}/{methodName}?a={a}&b={b}&c={c}");
@@ -81,28 +81,6 @@ namespace microServeIt.Tests
             result.ShouldBe( (a, b, c) );
         }
         
-        [Fact]
-        public async Task ServeItControllerSelectsAMethodUsingParameterNames()
-        {
-            string a = "p1!";
-            int b = 2;
-            string c = "c";
-            var httpResult = await client.GetAsync($"{nameof(ITestServeIt)}/{nameof(ITestServeIt.GetParameters)}?a={a}&b={b}");
-            var stringResult = await httpResult.Content.ReadAsStringAsync();
-            console.QuoteLine(stringResult);
-            var result = JsonConvert.DeserializeObject<(string,string)>(stringResult);
-            result.Item1.ShouldBe( a.ToString());
-            result.Item2.ShouldBe( b.ToString());            
-            
-            httpResult = await client.GetAsync($"{nameof(ITestServeIt)}/{nameof(ITestServeIt.GetParameters)}?a={a}&b={b}&c={c}");
-            stringResult = await httpResult.Content.ReadAsStringAsync();
-            console.QuoteLine(stringResult);
-            var result2 = JsonConvert.DeserializeObject<(string,string,string)>(stringResult);
-            result2.Item1.ShouldBe( a.ToString());
-            result2.Item2.ShouldBe( b.ToString());
-            result2.Item3.ShouldBe( c.ToString());
-        }
-
         public ServeItRequestRoutingFacts(ITestOutputHelper console)
         {
             this.console = console;

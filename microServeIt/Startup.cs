@@ -22,8 +22,8 @@ namespace microServeIt
         {
             services.AddMvc();
             services.AddLogging();
-            services.AddScoped<ITestServeIt,TestServeIt>();
-            services.AddScoped<TestServeItB>();
+            services.AddScoped<IServeItDiagnostics,ServeItDiagnostics>();
+            services.AddScoped<ServeItDiagnosticsB>();
             services.AddSingleton(services);
             Services = services;
         }
@@ -36,28 +36,4 @@ namespace microServeIt
             LatestInstance=this;
         }
     }
-
-    public interface ITestServeIt
-    {
-        Dictionary<string, object> ShowRouteValues(Dictionary<string, object> allMvcRouteValues);
-        (string, string) GetParameters(string a, string b);
-        (string, int) GetParameters(string a, int b);
-        (object, object, object) GetParameters(object a, object b, object c);
-        object[] GetParameters(params object[] args);
-    }
-
-    public class TestServeIt : ITestServeIt 
-    {
-        public Dictionary<string, object> ShowRouteValues(Dictionary<string, object> allMvcRouteValues) => allMvcRouteValues;
-        public (string, string) GetParameters(string a, string b) => (a, b);
-        public (string, int) GetParameters(string a, int b) => (a, b);
-        public (object, object, object) GetParameters(object a, object b, object c) => (a, b, c);
-        public object[] GetParameters(params object[] args) => args;
-    }
-
-    public class TestServeItB
-    {
-        public Dictionary<string, object> ReturnParameters(Dictionary<string, object> args) => args;
-    }
-
 }

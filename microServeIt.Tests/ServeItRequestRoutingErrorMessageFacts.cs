@@ -47,9 +47,9 @@ namespace microServeIt.Tests
             var serviceProvider = serviceCollection.BuildServiceProvider();
             var serveItController= 
                 new ServeItController(serviceCollection, serviceProvider, serviceProvider.GetService<ILogger<ServeItController>>())
-                   .WithControllerContext("Serve", new {service = nameof(ITestServeIt), method = "NonExistentMethod"});
+                   .WithControllerContext("Serve", new {service = nameof(IServeItDiagnostics), method = "NonExistentMethod"});
             serveItController.ControllerContext.RouteData= new RouteData();                                                          
-            serveItController.ControllerContext.RouteData.Values.Add("service",nameof(ITestServeIt));
+            serveItController.ControllerContext.RouteData.Values.Add("service",nameof(IServeItDiagnostics));
             serveItController.ControllerContext.RouteData.Values.Add("method","NonExistentMethod");
 
             var ex = Assert.Throws<ArgumentException>(() => serveItController.Serve());            
