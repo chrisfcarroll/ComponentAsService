@@ -21,7 +21,7 @@ namespace microServeIt.Tests
         readonly ITestOutputHelper console;
 
         [Fact]
-        public void ServeItController_ExplainsIfServiceNotFound()
+        public void ServeItController_ThrowsExplanationIfServiceNotFound()
         {
             var serviceCollection = new ServiceCollection();
             new WhiteBoxStartup(new ConfigurationBuilder().Build()).ConfigureServices(serviceCollection);
@@ -40,7 +40,7 @@ namespace microServeIt.Tests
         }
         
         [Fact]
-        public void ServeItController_ExplainsIfMethodNotFound()
+        public void ServeItController_ThrowsExplanationIfMethodNotFound()
         {
             var serviceCollection = new ServiceCollection();
             new WhiteBoxStartup(new ConfigurationBuilder().Build()).ConfigureServices(serviceCollection);

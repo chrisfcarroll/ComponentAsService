@@ -19,6 +19,7 @@ namespace microServeIt.Tests
         public void Method_UseServeIt_ThrowsExplanationIfMvcServiceIsNotFound()
         {
             Assert.ThrowsAny<Exception>( ()=> GivenClientForRunningServer<StartupMissingMvc>())
+                  .With(e=>console.WriteLine(e.ToString()))
                   .Message
                   .ShouldContain(ServeItStartUpExtensions.MvcRoutingRequiredMessage );
         }

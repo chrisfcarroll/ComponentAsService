@@ -1,58 +1,73 @@
 ﻿using System;
 using System.Collections.Generic;
+using microServeIt.Controllers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.Internal;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Routing.Constraints;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace microServeIt
 {
     public static class ServeItStartUpExtensions
     {
-        /// <summary>
-        /// Adds a Route mapping to <paramref name="app"/> for <see cref="ServeItController/>.<see cref="ServeItController.Serve"/> action, 
-        /// so that ServeIt can handle incoming requests.
-        /// </summary>
-        /// <param name="app">the application Builder you are building</param>
-        /// <param name="routeName">The name for ServeIt's route.</param>
-        /// <param name="routeTemplate">The route template which ServeIt will match.</param>
-        /// <param name="defaults">The defaults for the route used by ServeIt.
-        /// By default, this is <code>new {controller="ServeIt", action="Serve"}</code>. If you override this, you must still include the 
-        /// defaults for <code>controller="ServeIt", action="Serve"</code>, otherwise your route will not be served by ServeIt
-        /// </param>
-        /// <param name="constraints">The constraints for the route used by ServeIt.
-        ///By default this is:
-        /// <code>new {
-        ///     service= new RegexRouteConstraint(RegexValidCSharpIdentifier),
-        ///     method= new RegexRouteConstraint(RegexValidCSharpIdentifier),
-        /// }</code>
-        /// </param>
+        ///  <summary>
+        ///  Adds a Route mapping to <paramref name="app"/> for <see cref="ServeItController.<see cref="ServeItController.Serve"/> action, 
+        ///  so that ServeIt can handle incoming requests.
+        ///  </summary>
+        ///  <param name="app">the application Builder you are building</param>
+        ///  <param name="routeName">The name for ServeIt's route.</param>
+        ///  <param name="routeTemplate">The route template which ServeIt will match.</param>
+        ///  <param name="defaults">The defaults for the route used by ServeIt.
+        ///  By default, this is <code>new {controller="ServeIt", action="Serve"}</code>. If you override this, you must still include the 
+        ///  defaults for <code>controller="ServeIt", action="Serve"</code>, otherwise your route will not be served by ServeIt
+        ///  </param>
+        ///  <param name="constraints">The constraints for the route used by ServeIt.
+        /// By default this is:
+        ///  <code>new {
+        ///      service= new RegexRouteConstraint(RegexValidCSharpIdentifier),
+        ///      method= new RegexRouteConstraint(RegexValidCSharpIdentifier),
+        ///  }</code>
+        ///  </param>
+        /// <param name="specialNames">Pass in a customised <see cref="SpecialNames"/> instance if you need to change the
+        /// controller or action name, or the service or method constraint names, or the of a special parameter.
+        /// The default value is <see cref="SpecialNames.DefaultValues"/></param>
         /// <returns><paramref name="app"/></returns>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown if you have not configured <paramref name="app"/>'s ServiceProvider with an MvcRouteHandler.
-        /// Avoid this by configuring <paramref name="app"/>.AddMvc() in the usual way. 
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// Thrown if you override <paramref name="defaults"/> to not use controller=ServeIt, action=Serve
-        /// </exception>
+        ///  <exception cref="InvalidOperationException">
+        ///  Thrown if you have not configured <paramref name="app"/>'s ServiceProvider with an MvcRouteHandler.
+        ///  Avoid this by configuring <paramref name="app"/>.AddMvc() in the usual way. 
+        ///  </exception>
+        ///  <exception cref="ArgumentException">
+        ///  Thrown if you override <paramref name="defaults"/> to not use controller=ServeIt, action=Serve
+        ///  </exception>
         public static IApplicationBuilder UseServeIt(this IApplicationBuilder app,
                                                     string routeName   = "ServeItRoute",
                                                     string routeTemplate    = PseudoTemplateServiceSlashMethod,
                                                     object defaults    = null,
-                                                    object constraints = null)
+                                                    object constraints = null,
+                                                    SpecialNames specialNames=null)
         {
+            specialNames = specialNames ?? SpecialNames.DefaultValues;
+            
             if (routeTemplate == PseudoTemplateServiceSlashMethod) routeTemplate = RouteTemplateServiceSlashMethod;
             routeTemplate = routeTemplate ?? RouteTemplateServiceSlashMethod;
-            defaults = defaults ?? new {controller="ServeIt", action="Serve"};
+            
+            defaults = defaults ?? 
+                       new
+                       {
+                           controller = specialNames.ServeItControllerName, 
+                           action     = specialNames.ServeItActionName, 
+                       };
+            
             constraints= constraints ?? 
-                         new
-                         {
-                             service= new Microsoft.AspNetCore.Routing.Constraints.RegexRouteConstraint(RegexValidCSharpIdentifier),
-                             method= new Microsoft.AspNetCore.Routing.Constraints.RegexRouteConstraint(RegexValidCSharpIdentifier),
-                         };
+                 new RouteValueDictionary
+                 {
+                     {specialNames.RouteValueServiceName, new RegexRouteConstraint(RegexValidCSharpIdentifier)},
+                     {specialNames.RouteValueMethodName,  new RegexRouteConstraint(RegexValidCSharpIdentifier)},
+                 };
             
             var mvcRouteHandler = EnsureMvcRouteHandlerElseThrow(app);
-            EnsureControllerServeItAndActionServeElseThrow(defaults);
+            EnsureControllerServeItAndActionServeElseThrow(defaults, specialNames);
 
             app.UseRouter(routeBuilder =>
                           {
@@ -91,15 +106,29 @@ namespace microServeIt
             }
         }
 
-        static void EnsureControllerServeItAndActionServeElseThrow(object defaults)
+        static void EnsureControllerServeItAndActionServeElseThrow(object defaults, SpecialNames specialNames)
         {
             var dict = ObjectToDictionary(defaults);
-            if(   !dict.ContainsKey("controller") || dict["controller"] as string!="ServeIt"
-               || !dict.ContainsKey("action")     || dict["action"]     as string!="Serve")
+            if(   !dict.ContainsKey("controller") || dict["controller"] as string!=specialNames.ServeItControllerName
+               || !dict.ContainsKey("action")     || dict["action"]     as string!=specialNames.ServeItActionName)
             {
-                throw new ArgumentException(
-                    "If you override the defaults for the ServeIt route, you must still include {controller=\"ServeIt\", action=\"Serve\"} in your defaults",
-                    nameof(defaults));
+                if (specialNames != SpecialNames.DefaultValues)
+                {
+                    throw new ArgumentException(
+                                                "If you override the defaults for the ServeIt route, and also specify "
+                                              + "the specialNames parameter, you must still include "
+                                              + "{controller=\"specialNames.ServeItControllerName\", "
+                                              + "{action=\"specialNames.ServeItActionName\"} in your defaults.",
+                                                nameof(defaults));
+                }
+                else
+                {
+                    throw new ArgumentException(
+                                                "If you override the defaults for the ServeIt route, you must still include "
+                                              + "{controller=\"" + specialNames.ServeItControllerName + "\", "
+                                              + "{action=\""     + specialNames.ServeItActionName     + "\"} in your defaults.",
+                                                nameof(defaults));
+                }
             }   
         }
 
