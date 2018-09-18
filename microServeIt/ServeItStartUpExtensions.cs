@@ -11,6 +11,13 @@ namespace microServeIt
 {
     public static class ServeItStartUpExtensions
     {
+        public static IServiceCollection AddServeIt(this IServiceCollection services)
+        {
+            services.AddSingleton( services );
+            services.AddScoped<IServeItDiagnostics, ServeItDiagnostics>();
+            return services;
+        }
+        
         ///  <summary>
         ///  Adds a Route mapping to <paramref name="app"/> for <see cref="ServeItController.<see cref="ServeItController.Serve"/> action, 
         ///  so that ServeIt can handle incoming requests.

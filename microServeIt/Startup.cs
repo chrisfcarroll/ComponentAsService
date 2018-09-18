@@ -20,16 +20,16 @@ namespace microServeIt
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc();
             services.AddLogging();
-            services.AddScoped<IServeItDiagnostics,ServeItDiagnostics>();
+            services.AddMvc();
+            services.AddServeIt();
             services.AddScoped<ServeItDiagnosticsB>();
-            services.AddSingleton(services);
             Services = services;
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+            app.UseDeveloperExceptionPage();
             app.UseServeIt();
             ServiceProvider= app.ApplicationServices;
             HostingEnvironment=env;
