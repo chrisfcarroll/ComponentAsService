@@ -13,7 +13,8 @@ namespace microServeIt
     {
         public static IServiceCollection AddServeIt(this IServiceCollection services)
         {
-            services.AddSingleton( services );
+            services.AddMvc();
+            services.AddSingleton(services);
             services.AddScoped<IServeItDiagnostics, ServeItDiagnostics>();
             return services;
         }

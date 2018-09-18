@@ -1,22 +1,17 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
 using microServeIt.Controllers;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using TestBase;
 using Xunit;
 using Xunit.Abstractions;
 using Assert = Xunit.Assert;
 
-namespace microServeIt.Tests
+namespace microServeIt.Specs
 {
-    public class ServeItRequestRoutingFailureMessages
+    public class ServeItThrowsIfItCannotRouteAUrl
     {
         readonly ITestOutputHelper console;
 
@@ -57,6 +52,6 @@ namespace microServeIt.Tests
             ex.Message.ShouldContain("NonExistentMethod");
         }
 
-        public ServeItRequestRoutingFailureMessages(ITestOutputHelper console) => this.console = console;
+        public ServeItThrowsIfItCannotRouteAUrl(ITestOutputHelper console) => this.console = console;
     }
 }

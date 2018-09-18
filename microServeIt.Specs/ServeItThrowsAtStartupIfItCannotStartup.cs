@@ -8,12 +8,12 @@ using Xunit;
 using Xunit.Abstractions;
 using Assert = Xunit.Assert;
 
-namespace microServeIt.Tests
+namespace microServeIt.Specs
 {
-    public class ServeItStartupFacts : HostedMvcTestFixtureBase
+    public class ServeItThrowsAtStartupIfItCannotStartup : HostedMvcTestFixtureBase
     {
         readonly ITestOutputHelper console;
-        public ServeItStartupFacts(ITestOutputHelper console) => this.console = console;
+        public ServeItThrowsAtStartupIfItCannotStartup(ITestOutputHelper console) => this.console = console;
 
         [Fact]
         public void Method_UseServeIt_ThrowsExplanationIfMvcServiceIsNotFound()
@@ -27,8 +27,8 @@ namespace microServeIt.Tests
         public class StartupMissingMvc
         {
             public StartupMissingMvc(IConfiguration configuration) { }
-            public void ConfigureServices(IServiceCollection services)              {}
+            public void ConfigureServices(IServiceCollection services) {}
             public void Configure(IApplicationBuilder app, IHostingEnvironment env) { app.UseServeIt(); }
-        }
+        }        
     }
 }

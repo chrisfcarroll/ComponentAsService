@@ -4,15 +4,14 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using microServeIt.Controllers;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using TestBase;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace microServeIt.Tests
+namespace microServeIt.Specs
 {
-    public class ServeItRequestRoutingFacts : HostedMvcTestFixtureBase
+    public class ServeItRoutesAUrlToAComponentMethod : HostedMvcTestFixtureBase
     {
         readonly ITestOutputHelper console;
 
@@ -51,7 +50,7 @@ namespace microServeIt.Tests
         
         [Theory]
         [InlineData(nameof(IServeItDiagnostics),nameof(IServeItDiagnostics.ShowRouteValues), "p1", "p1", "p2",2, "p3",3)]
-        public async Task ServeItController_GetsDictionaryKeyParametersFromQueryString(string serviceName, string methodName, params object[] data)
+        public async Task ServeItController_ParsesQueryStringToADictionary(string serviceName, string methodName, params object[] data)
         {
             var paramDict= new Dictionary<string,object>();
             for (int i = 0; i < data.Length ; i += 2)
@@ -71,7 +70,7 @@ namespace microServeIt.Tests
 
         [Theory]
         [InlineData(nameof(IServeItDiagnostics),nameof(IServeItDiagnostics.GetParameters), "a", "b", "c")]
-        public async Task ServeItController_IdentifiesNamedParametersFromQueryString(string serviceName, string methodName, string a, string b, string c)
+        public async Task ServeItController_IdentifiesNamedParametersInQueryString(string serviceName, string methodName, string a, string b, string c)
         {
             var httpResult= await client.GetAsync($"{serviceName}/{methodName}?a={a}&b={b}&c={c}");
             var stringResult = await httpResult.Content.ReadAsStringAsync();
@@ -81,7 +80,7 @@ namespace microServeIt.Tests
             result.ShouldBe( (a, b, c) );
         }
         
-        public ServeItRequestRoutingFacts(ITestOutputHelper console)
+        public ServeItRoutesAUrlToAComponentMethod(ITestOutputHelper console)
         {
             this.console = console;
             client = GivenClientForRunningServer<WhiteBoxStartup>();

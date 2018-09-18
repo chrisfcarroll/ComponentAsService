@@ -1,23 +1,18 @@
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using microServeIt.Controllers;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using TestBase;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace microServeIt.Tests
+namespace microServeIt.Specs
 {
-    public class ServeItRequestMethodMatchingFacts : HostedMvcTestFixtureBase
+    public class ServeItRoutesAUrlToAMatchingMethodOverload : HostedMvcTestFixtureBase
     {
         readonly ITestOutputHelper console;
         
         [Fact]
-        public async Task ServeItControllerSelectsAMethodUsingParameterNames()
+        public async Task ServeItController_MatchesAMethodUsingParameterNames()
         {
             string a = "p1!";
             int b = 2;
@@ -39,7 +34,7 @@ namespace microServeIt.Tests
         }
 
         [Fact]
-        public async Task ServeItControllerSelectsAMethodUsingNumberOfParameters()
+        public async Task ServeItController_MatchesAMethodUsingNumberOfParameters()
         {
             string a = "p1!";
             int b = 2;
@@ -55,7 +50,7 @@ namespace microServeIt.Tests
             JsonConvert.DeserializeObject<int>(stringResult).ShouldBe(3);
         }
 
-        public ServeItRequestMethodMatchingFacts(ITestOutputHelper console)
+        public ServeItRoutesAUrlToAMatchingMethodOverload(ITestOutputHelper console)
         {
             this.console = console;
             client = GivenClientForRunningServer<WhiteBoxStartup>();
