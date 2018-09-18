@@ -12,6 +12,6 @@
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\microServeIt\microServeIt.csproj" />
+    <ProjectReference Include="..\ComponentAsService\ComponentAsService.csproj" />
   </ItemGroup>
 </Project>

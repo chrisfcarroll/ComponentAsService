@@ -13,8 +13,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ComponentAsService\ComponentAsService.csproj" />
     <ProjectReference Include="..\ExampleComponent\ExampleComponent.csproj" />
-    <ProjectReference Include="..\microServeIt\microServeIt.csproj" />
   </ItemGroup>
 
 </Project>

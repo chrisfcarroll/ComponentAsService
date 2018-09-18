@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace microServeIt
+namespace ComponentAsService
 {
-    public interface IServeItDiagnostics
+    public interface IComponentAsServiceDiagnostics
     {
         Dictionary<string, object> ShowRouteValues(Dictionary<string, object> allMvcRouteValues);
         (string, string)           GetParameters(string a, string b);
@@ -16,7 +16,7 @@ namespace microServeIt
     }
     
     
-    public class ServeItDiagnostics : IServeItDiagnostics 
+    public class ComponentAsServiceDiagnostics : IComponentAsServiceDiagnostics 
     {
         public Dictionary<string, object> ShowRouteValues(Dictionary<string, object> allMvcRouteValues) => allMvcRouteValues;
         public (string, string)           GetParameters(string a, string b)                             => (a, b);
@@ -29,7 +29,7 @@ namespace microServeIt
         public int GetParameterCount(params object[] args) => args?.Length ?? -1;
     }
     
-    public class ServeItDiagnosticsB
+    public class ComponentAsServiceDiagnosticsB
     {
         public Dictionary<string, object> ReturnParameters(Dictionary<string, object> args) => args;
     }

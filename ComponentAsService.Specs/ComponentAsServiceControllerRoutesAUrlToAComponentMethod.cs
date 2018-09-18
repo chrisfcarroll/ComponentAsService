@@ -2,22 +2,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using microServeIt.Controllers;
 using Microsoft.AspNetCore.Routing;
 using Newtonsoft.Json;
 using TestBase;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace microServeIt.Specs
+namespace ComponentAsService.Specs
 {
-    public class ServeItRoutesAUrlToAComponentMethod : HostedMvcTestFixtureBase
+    public class ComponentAsServiceControllerRoutesAUrlToAComponentMethod : HostedMvcTestFixtureBase
     {
         readonly ITestOutputHelper console;
 
         [Theory]
-        [InlineData(nameof(IServeItDiagnostics),nameof(IServeItDiagnostics.ShowRouteValues))]
-        public async Task ServeItController_IdentifiesServiceAndMethodFromRoute(string serviceName, string methodName)
+        [InlineData(nameof(IComponentAsServiceDiagnostics),nameof(IComponentAsServiceDiagnostics.ShowRouteValues))]
+        public async Task Serve_IdentifiesServiceAndMethodFromRoute(string serviceName, string methodName)
         {
             var httpResult= await client.GetAsync($"{serviceName}/{methodName}?name=input&number=2");
             var stringResult = await httpResult.Content.ReadAsStringAsync();
@@ -29,28 +28,28 @@ namespace microServeIt.Specs
         }
         
         [Theory]
-        [InlineData(nameof(IServeItDiagnostics),nameof(IServeItDiagnostics.ShowRouteValues))]
-        public async Task ServeItController_TreatsSpecialParameterNameForAllMvcRouteValuesSpecially(string serviceName, string methodName)
+        [InlineData(nameof(IComponentAsServiceDiagnostics),nameof(IComponentAsServiceDiagnostics.ShowRouteValues))]
+        public async Task Serve_TreatsSpecialParameterNameForAllMvcRouteValuesSpecially(string serviceName, string methodName)
         {
             var httpResult= await client.GetAsync($"{serviceName}/{methodName}?name=input&number=2");
             var stringResult = await httpResult.Content.ReadAsStringAsync();
             console.QuoteLine(stringResult);
             var dictionaryResult = JsonConvert.DeserializeObject<RouteValueDictionary>(stringResult);
 
-            foreach (var expectedRouteValueKey in ServeItController.ReservedRouteValueNames)
+            foreach (var expectedRouteValueKey in ComponentAsServiceController.ReservedRouteValueNames)
             {
                 dictionaryResult.ShouldHaveKey(expectedRouteValueKey);
             }
-            dictionaryResult.ShouldHaveKey("controller").ShouldBe("ServeIt");
-            dictionaryResult.ShouldHaveKey("action").ShouldBe("Serve");
+            dictionaryResult.ShouldHaveKey("controller").ShouldBe(SpecialNames.DefaultValues.ComponentAsServiceControllerName);
+            dictionaryResult.ShouldHaveKey("action").ShouldBe(SpecialNames.DefaultValues.ComponentAsServiceControllerActionName);
             dictionaryResult.ShouldHaveKey(SpecialNames.DefaultValues.RouteValueServiceName ).ShouldBe(serviceName);
             dictionaryResult.ShouldHaveKey(SpecialNames.DefaultValues.RouteValueMethodName  ).ShouldBe(methodName);
         }
 
         
         [Theory]
-        [InlineData(nameof(IServeItDiagnostics),nameof(IServeItDiagnostics.ShowRouteValues), "p1", "p1", "p2",2, "p3",3)]
-        public async Task ServeItController_ParsesQueryStringToADictionary(string serviceName, string methodName, params object[] data)
+        [InlineData(nameof(IComponentAsServiceDiagnostics),nameof(IComponentAsServiceDiagnostics.ShowRouteValues), "p1", "p1", "p2",2, "p3",3)]
+        public async Task Serve_ParsesQueryStringToADictionary(string serviceName, string methodName, params object[] data)
         {
             var paramDict= new Dictionary<string,object>();
             for (int i = 0; i < data.Length ; i += 2)
@@ -69,8 +68,8 @@ namespace microServeIt.Specs
         }
 
         [Theory]
-        [InlineData(nameof(IServeItDiagnostics),nameof(IServeItDiagnostics.GetParameters), "a", "b", "c")]
-        public async Task ServeItController_IdentifiesNamedParametersInQueryString(string serviceName, string methodName, string a, string b, string c)
+        [InlineData(nameof(IComponentAsServiceDiagnostics),nameof(IComponentAsServiceDiagnostics.GetParameters), "a", "b", "c")]
+        public async Task Serve_IdentifiesNamedParametersInQueryString(string serviceName, string methodName, string a, string b, string c)
         {
             var httpResult= await client.GetAsync($"{serviceName}/{methodName}?a={a}&b={b}&c={c}");
             var stringResult = await httpResult.Content.ReadAsStringAsync();
@@ -80,7 +79,7 @@ namespace microServeIt.Specs
             result.ShouldBe( (a, b, c) );
         }
         
-        public ServeItRoutesAUrlToAComponentMethod(ITestOutputHelper console)
+        public ComponentAsServiceControllerRoutesAUrlToAComponentMethod(ITestOutputHelper console)
         {
             this.console = console;
             client = GivenClientForRunningServer<WhiteBoxStartup>();

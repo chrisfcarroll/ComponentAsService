@@ -1,12 +1,14 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
 
-namespace microServeIt
+namespace ComponentAsService
 {
+    /// <summary>
+    /// So-called because it exposes all its innards as public properties
+    /// </summary>
     public class WhiteBoxStartup
     {
         public static WhiteBoxStartup LatestInstance { get;private set;}
@@ -21,16 +23,15 @@ namespace microServeIt
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddLogging();
-            services.AddMvc();
-            services.AddServeIt();
-            services.AddScoped<ServeItDiagnosticsB>();
+            services.AddComponentAsService();
+            services.AddScoped<ComponentAsServiceDiagnosticsB>();
             Services = services;
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             app.UseDeveloperExceptionPage();
-            app.UseServeIt();
+            app.UseComponentAsService();
             ServiceProvider= app.ApplicationServices;
             HostingEnvironment=env;
             LatestInstance=this;

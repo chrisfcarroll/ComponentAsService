@@ -6,9 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace microServeIt.Controllers
+namespace ComponentAsService
 {
-    public class ServeItController : Controller
+    public class ComponentAsServiceController : Controller
     {
         public static readonly string[] ReservedRouteValueNames = new []{"service","method","controller","action"};
         
@@ -16,7 +16,7 @@ namespace microServeIt.Controllers
         readonly IServiceProvider serviceProvider;
         readonly ILogger logger;
 
-        public ServeItController(IServiceCollection services, IServiceProvider serviceProvider ,ILogger<ServeItController> logger  )
+        public ComponentAsServiceController(IServiceCollection services, IServiceProvider serviceProvider ,ILogger<ComponentAsServiceController> logger  )
         {
             this.services = services;
             this.serviceProvider = serviceProvider;

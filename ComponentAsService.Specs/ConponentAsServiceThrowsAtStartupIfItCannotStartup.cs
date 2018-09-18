@@ -8,15 +8,15 @@ using Xunit;
 using Xunit.Abstractions;
 using Assert = Xunit.Assert;
 
-namespace microServeIt.Specs
+namespace ComponentAsService.Specs
 {
-    public class ServeItThrowsAtStartupIfItCannotStartup : HostedMvcTestFixtureBase
+    public class ConponentAsServiceThrowsAtStartupIfItCannotStartup : HostedMvcTestFixtureBase
     {
         readonly ITestOutputHelper console;
-        public ServeItThrowsAtStartupIfItCannotStartup(ITestOutputHelper console) => this.console = console;
+        public ConponentAsServiceThrowsAtStartupIfItCannotStartup(ITestOutputHelper console) => this.console = console;
 
         [Fact]
-        public void Method_UseServeIt_ThrowsExplanationIfMvcServiceIsNotFound()
+        public void Method_UseComponentAsService_ThrowsExplanationIfMvcServiceIsNotFound()
         {
             Assert.ThrowsAny<Exception>( ()=> GivenClientForRunningServer<StartupMissingMvc>())
                   .With(e=>console.WriteLine(e.ToString()))
@@ -28,7 +28,7 @@ namespace microServeIt.Specs
         {
             public StartupMissingMvc(IConfiguration configuration) { }
             public void ConfigureServices(IServiceCollection services) {}
-            public void Configure(IApplicationBuilder app, IHostingEnvironment env) { app.UseServeIt(); }
+            public void Configure(IApplicationBuilder app, IHostingEnvironment env) { app.UseComponentAsService(); }
         }        
     }
 }

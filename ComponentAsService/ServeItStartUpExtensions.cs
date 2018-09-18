@@ -1,26 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
-using microServeIt.Controllers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.Internal;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Routing.Constraints;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace microServeIt
+namespace ComponentAsService
 {
     public static class ServeItStartUpExtensions
     {
-        public static IServiceCollection AddServeIt(this IServiceCollection services)
+        public static IServiceCollection AddComponentAsService(this IServiceCollection services)
         {
             services.AddMvc();
             services.AddSingleton(services);
-            services.AddScoped<IServeItDiagnostics, ServeItDiagnostics>();
+            services.AddScoped<IComponentAsServiceDiagnostics, ComponentAsServiceDiagnostics>();
             return services;
         }
         
         ///  <summary>
-        ///  Adds a Route mapping to <paramref name="app"/> for <see cref="ServeItController.<see cref="ServeItController.Serve"/> action, 
+        ///  Adds a Route mapping to <paramref name="app"/> for <see cref="ComponentAsServiceController.<see cref="ComponentAsServiceController.Serve"/> action, 
         ///  so that ServeIt can handle incoming requests.
         ///  </summary>
         ///  <param name="app">the application Builder you are building</param>
@@ -48,7 +47,7 @@ namespace microServeIt
         ///  <exception cref="ArgumentException">
         ///  Thrown if you override <paramref name="defaults"/> to not use controller=ServeIt, action=Serve
         ///  </exception>
-        public static IApplicationBuilder UseServeIt(this IApplicationBuilder app,
+        public static IApplicationBuilder UseComponentAsService(this IApplicationBuilder app,
                                                     string routeName   = "ServeItRoute",
                                                     string routeTemplate    = PseudoTemplateServiceSlashMethod,
                                                     object defaults    = null,
@@ -63,8 +62,8 @@ namespace microServeIt
             defaults = defaults ?? 
                        new
                        {
-                           controller = specialNames.ServeItControllerName, 
-                           action     = specialNames.ServeItActionName, 
+                           controller = specialNames.ComponentAsServiceControllerName, 
+                           action     = specialNames.ComponentAsServiceControllerActionName, 
                        };
             
             constraints= constraints ?? 
@@ -117,8 +116,8 @@ namespace microServeIt
         static void EnsureControllerServeItAndActionServeElseThrow(object defaults, SpecialNames specialNames)
         {
             var dict = ObjectToDictionary(defaults);
-            if(   !dict.ContainsKey("controller") || dict["controller"] as string!=specialNames.ServeItControllerName
-               || !dict.ContainsKey("action")     || dict["action"]     as string!=specialNames.ServeItActionName)
+            if(   !dict.ContainsKey("controller") || dict["controller"] as string!=specialNames.ComponentAsServiceControllerName
+               || !dict.ContainsKey("action")     || dict["action"]     as string!=specialNames.ComponentAsServiceControllerActionName)
             {
                 if (specialNames != SpecialNames.DefaultValues)
                 {
@@ -133,8 +132,8 @@ namespace microServeIt
                 {
                     throw new ArgumentException(
                                                 "If you override the defaults for the ServeIt route, you must still include "
-                                              + "{controller=\"" + specialNames.ServeItControllerName + "\", "
-                                              + "{action=\""     + specialNames.ServeItActionName     + "\"} in your defaults.",
+                                              + "{controller=\"" + specialNames.ComponentAsServiceControllerName + "\", "
+                                              + "{action=\""     + specialNames.ComponentAsServiceControllerActionName     + "\"} in your defaults.",
                                                 nameof(defaults));
                 }
             }   

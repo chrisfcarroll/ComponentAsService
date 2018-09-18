@@ -1,5 +1,5 @@
-﻿using ExampleComponent;
-using microServeIt;
+﻿using ComponentAsService;
+using ExampleComponent;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,7 +11,7 @@ namespace ExampleWebMvc
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
-            services.AddServeIt();
+            services.AddComponentAsService();
             services.AddScoped<IExemplify, ExampleImp>();
         }
 
@@ -25,7 +25,7 @@ namespace ExampleWebMvc
                                            name: "default",
                                            template: "{controller=Home}/{action=Index}/{id?}");
                        });
-            app.UseServeIt();
+            app.UseComponentAsService();
         }
     }
 }

@@ -5,26 +5,26 @@ using TestBase;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace microServeIt.Specs
+namespace ComponentAsService.Specs
 {
-    public class ServeItRoutesAUrlToAMatchingMethodOverload : HostedMvcTestFixtureBase
+    public class ConponentAsServiceControllerRoutesAUrlToAMatchingMethodOverload : HostedMvcTestFixtureBase
     {
         readonly ITestOutputHelper console;
         
         [Fact]
-        public async Task ServeItController_MatchesAMethodUsingParameterNames()
+        public async Task Serve_MatchesAMethodUsingParameterNames()
         {
             string a = "p1!";
             int b = 2;
             string c = "c";
-            var httpResult = await client.GetAsync($"{nameof(IServeItDiagnostics)}/{nameof(IServeItDiagnostics.GetParameters)}?a={a}&b={b}");
+            var httpResult = await client.GetAsync($"{nameof(IComponentAsServiceDiagnostics)}/{nameof(IComponentAsServiceDiagnostics.GetParameters)}?a={a}&b={b}");
             var stringResult = await httpResult.Content.ReadAsStringAsync();
             console.QuoteLine(stringResult);
             var result = JsonConvert.DeserializeObject<(string,string)>(stringResult);
             result.Item1.ShouldBe( a.ToString());
             result.Item2.ShouldBe( b.ToString());            
             
-            httpResult = await client.GetAsync($"{nameof(IServeItDiagnostics)}/{nameof(IServeItDiagnostics.GetParameters)}?a={a}&b={b}&c={c}");
+            httpResult = await client.GetAsync($"{nameof(IComponentAsServiceDiagnostics)}/{nameof(IComponentAsServiceDiagnostics.GetParameters)}?a={a}&b={b}&c={c}");
             stringResult = await httpResult.Content.ReadAsStringAsync();
             console.QuoteLine(stringResult);
             var result2 = JsonConvert.DeserializeObject<(string,string,string)>(stringResult);
@@ -34,23 +34,23 @@ namespace microServeIt.Specs
         }
 
         [Fact]
-        public async Task ServeItController_MatchesAMethodUsingNumberOfParameters()
+        public async Task Serve_MatchesAMethodUsingNumberOfParameters()
         {
             string a = "p1!";
             int b = 2;
             string c = "c";
-            var httpResult = await client.GetAsync($"{nameof(IServeItDiagnostics)}/{nameof(IServeItDiagnostics.GetParameterCount)}?a={a}&b={b}");
+            var httpResult = await client.GetAsync($"{nameof(IComponentAsServiceDiagnostics)}/{nameof(IComponentAsServiceDiagnostics.GetParameterCount)}?a={a}&b={b}");
             var stringResult = await httpResult.Content.ReadAsStringAsync();
             console.QuoteLine(stringResult);
             JsonConvert.DeserializeObject<int>(stringResult).ShouldBe(2);
             
-            httpResult = await client.GetAsync($"{nameof(IServeItDiagnostics)}/{nameof(IServeItDiagnostics.GetParameterCount)}?a={a}&b={b}&c={c}");
+            httpResult = await client.GetAsync($"{nameof(IComponentAsServiceDiagnostics)}/{nameof(IComponentAsServiceDiagnostics.GetParameterCount)}?a={a}&b={b}&c={c}");
             stringResult = await httpResult.Content.ReadAsStringAsync();
             console.QuoteLine(stringResult);
             JsonConvert.DeserializeObject<int>(stringResult).ShouldBe(3);
         }
 
-        public ServeItRoutesAUrlToAMatchingMethodOverload(ITestOutputHelper console)
+        public ConponentAsServiceControllerRoutesAUrlToAMatchingMethodOverload(ITestOutputHelper console)
         {
             this.console = console;
             client = GivenClientForRunningServer<WhiteBoxStartup>();

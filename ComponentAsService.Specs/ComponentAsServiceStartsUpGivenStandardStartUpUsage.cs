@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -7,20 +6,19 @@ using Microsoft.Extensions.DependencyInjection;
 using TestBase;
 using Xunit;
 using Xunit.Abstractions;
-using Assert = Xunit.Assert;
 
-namespace microServeIt.Specs
+namespace ComponentAsService.Specs
 {
-    public class ServeItStartsupGivenStandardStartUpUsage : HostedMvcTestFixtureBase
+    public class ComponentAsServiceStartsUpGivenStandardStartUpUsage : HostedMvcTestFixtureBase
     {
         readonly ITestOutputHelper console;
-        public ServeItStartsupGivenStandardStartUpUsage(ITestOutputHelper console) => this.console = console;
+        public ComponentAsServiceStartsUpGivenStandardStartUpUsage(ITestOutputHelper console) => this.console = console;
 
         [Fact]
-        public async Task Method_AddServeIt_CallsAddMvc()
+        public async Task Method_AddComponentAsService_CallsAddMvc()
         {
             var client=GivenClientForRunningServer<StartupUsingAddServeItWithoutAddMvc>().ShouldNotBeNull();
-            var httpResult= await client.GetAsync($"{nameof(IServeItDiagnostics)}/{nameof(IServeItDiagnostics.ShowRouteValues)}");
+            var httpResult= await client.GetAsync($"{nameof(IComponentAsServiceDiagnostics)}/{nameof(IComponentAsServiceDiagnostics.ShowRouteValues)}");
             var stringResult = await httpResult.Content.ReadAsStringAsync();
             console.QuoteLine(stringResult);            
         }
@@ -28,8 +26,8 @@ namespace microServeIt.Specs
         public class StartupUsingAddServeItWithoutAddMvc
         {
             public StartupUsingAddServeItWithoutAddMvc(IConfiguration configuration) { }
-            public void ConfigureServices(IServiceCollection services) { services.AddServeIt();}
-            public void Configure(IApplicationBuilder app, IHostingEnvironment env) { app.UseServeIt(); }
+            public void ConfigureServices(IServiceCollection services) { services.AddComponentAsService();}
+            public void Configure(IApplicationBuilder app, IHostingEnvironment env) { app.UseComponentAsService(); }
         }
     }
 }
