@@ -2,11 +2,7 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using TestBase;
 using Xunit;
 using Xunit.Abstractions;
@@ -21,7 +17,7 @@ namespace ComponentAsService.Specs.WhenStartingUp
         public UseComponentAsServiceStartsUp(ITestOutputHelper console)
         {
             this.console = console;
-            var server = GivenServerWithComponentAsService<StartupUsingAddServeItWithoutAddMvc>();
+            var server = GivenServerWithComponentAsService<MinimalStartup>();
             this.client = server.CreateClient().With(c => c.BaseAddress = new Uri("http://localhost"));
         }
 
@@ -40,21 +36,6 @@ namespace ComponentAsService.Specs.WhenStartingUp
         static TestServer GivenServerWithComponentAsService<TStartup>()
         {
             return TestServerBuilder.RunningServerUsingStartup<TStartup>( typeof(ComponentAsServiceController).Assembly);
-        }
-
-        class StartupUsingAddServeItWithoutAddMvc
-        {
-            public StartupUsingAddServeItWithoutAddMvc(IConfiguration configuration) {  }
-
-            public void ConfigureServices(IServiceCollection services)
-            {
-                services.AddComponentAsService();
-            }
-
-            public void Configure(IApplicationBuilder app, IHostingEnvironment env)
-            {
-                app.UseComponentAsService();
-            }
         }
     }
 }

@@ -7,7 +7,7 @@ using Xunit.Abstractions;
 
 namespace ComponentAsService.Specs.WhenServing
 {
-    public class ControllerRoutesAUrlToAMatchingMethodOverload : HostedMvcTestFixtureBase
+    public class RoutesAUrlToAMatchingMethodOverload : HostedMvcTestFixtureBase
     {
         readonly ITestOutputHelper console;
         
@@ -50,7 +50,7 @@ namespace ComponentAsService.Specs.WhenServing
             JsonConvert.DeserializeObject<int>(stringResult).ShouldBe(3);
         }
 
-        public ControllerRoutesAUrlToAMatchingMethodOverload(ITestOutputHelper console)
+        public RoutesAUrlToAMatchingMethodOverload(ITestOutputHelper console)
         {
             this.console = console;
             client = GivenClientForRunningServer<WhiteBoxStartup>();

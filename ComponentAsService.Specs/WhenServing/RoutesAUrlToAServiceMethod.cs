@@ -11,7 +11,7 @@ using Xunit.Abstractions;
 
 namespace ComponentAsService.Specs.WhenServing
 {
-    public class ControllerRoutesAUrlToAServiceMethod : HostedMvcTestFixtureBase
+    public class RoutesAUrlToAServiceMethod : HostedMvcTestFixtureBase
     {
         readonly ITestOutputHelper console;
 
@@ -98,7 +98,7 @@ namespace ComponentAsService.Specs.WhenServing
             result.ShouldBe( (a, b, c) );
         }
         
-        public ControllerRoutesAUrlToAServiceMethod(ITestOutputHelper console)
+        public RoutesAUrlToAServiceMethod(ITestOutputHelper console)
         {
             this.console = console;
             client = GivenClientForRunningServer<WhiteBoxStartup>();

@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc.ViewComponents;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace ComponentAsService.Specs.WhenStartingUp
+namespace ComponentAsService.Specs
 {
     public static class TestServerBuilder
     {
