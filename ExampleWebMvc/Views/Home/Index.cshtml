@@ -6,19 +6,43 @@
     <meta name="viewport" content="width=device-width" />
     <title>ComponentAsService Example</title>
     <style>
-        li { margin: 0.25rem;}
+        li,pre { margin: 0.25rem;}
         dd,dt{ line-height: 150%}
         * {font-family: Calibri, SansSerif}
-        code { font-family: "OCR A", Consolas, "Lucida Console", SansSerif; background-color: aliceblue}
+        a, pre,code { font-family: "OCR A", Consolas, "Lucida Console", SansSerif; background-color: #ffe}
     </style>
 </head>
+
 <body>
     <h1>Your Mvc WebApp</h1>
 
+    <h3>ComponentAsService Minimal Startup</h3>
+    <ul>
+        <li>Add the components you wish to serve to the <code>IServiceCollection</code> in your <code>StartUp</code> class.</li>
+        <li>Call <code>AddComponentAsService()</code> </li>
+        <li>Call <code>UseComponentAsService()</code></li>
+    </ul>
+    <code>
+    <pre>
+    public class Startup
+    {
+        public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddScoped&lt;IExemplify, ExampleImp&gt;();
+            services.AddComponentAsService();
+        }
+
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        {
+            app.UseComponentAsService();
+        }
+    }
+    </pre>
+    </code>
     <h3>ComponentAsService Default Routing</h3>
 
     <dl>
-        <dt><code>/{InterfaceName}/{MethodName}?queryStringAndFormPostParameters</code></dt>
+        <dt><code>/{(I)nterfaceName}/{MethodName}?queryStringAndFormPostParameters</code></dt>
 
         <dd>routes to=><br /><code>return Component.Method(parameters)</code></dd>
     </dl>

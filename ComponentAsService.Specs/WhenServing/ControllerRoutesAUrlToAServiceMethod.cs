@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Routing;
@@ -8,9 +9,9 @@ using TestBase;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace ComponentAsService.Specs
+namespace ComponentAsService.Specs.WhenServing
 {
-    public class ComponentAsServiceControllerRoutesAUrlToAComponentMethod : HostedMvcTestFixtureBase
+    public class ControllerRoutesAUrlToAServiceMethod : HostedMvcTestFixtureBase
     {
         readonly ITestOutputHelper console;
 
@@ -25,6 +26,22 @@ namespace ComponentAsService.Specs
 
             dictionaryResult.ShouldHaveKey("name").ShouldBe("input");
             dictionaryResult.ShouldHaveKey("number").ShouldBe("2");
+            httpResult.StatusCode.ShouldBe(HttpStatusCode.OK);
+        }
+
+        [Theory]
+        [InlineData(nameof(IComponentAsServiceDiagnostics),nameof(IComponentAsServiceDiagnostics.GetRouteValues))]
+        [InlineData("ComponentAsServiceDiagnostics",nameof(IComponentAsServiceDiagnostics.GetRouteValues))]
+        public async Task Serve_IdentifiesServiceByInterfaceNameWithOrWithoutLeadingI(string serviceName, string methodName)
+        {
+            var httpResult= await client.GetAsync($"{serviceName}/{methodName}?name=input&number=2");
+            var stringResult = await httpResult.Content.ReadAsStringAsync();
+            console.QuoteLine(stringResult);
+            var dictionaryResult = JsonConvert.DeserializeObject<RouteValueDictionary>(stringResult);
+
+            dictionaryResult.ShouldHaveKey("name").ShouldBe("input");
+            dictionaryResult.ShouldHaveKey("number").ShouldBe("2");
+            httpResult.StatusCode.ShouldBe(HttpStatusCode.OK);
         }
         
         [Theory]
@@ -36,14 +53,15 @@ namespace ComponentAsService.Specs
             console.QuoteLine(stringResult);
             var dictionaryResult = JsonConvert.DeserializeObject<RouteValueDictionary>(stringResult);
 
-            foreach (var expectedRouteValueKey in ComponentAsServiceController.ReservedRouteValueNames)
+            foreach (var expectedRouteValueKey in WhiteBoxStartup.LatestInstance.CaSConfiguration.RouteValuesKeysIgnoredForParameterMatching)
             {
                 dictionaryResult.ShouldHaveKey(expectedRouteValueKey);
             }
-            dictionaryResult.ShouldHaveKey("controller").ShouldBe(SpecialNames.DefaultValues.ComponentAsServiceControllerName);
-            dictionaryResult.ShouldHaveKey("action").ShouldBe(SpecialNames.DefaultValues.ComponentAsServiceControllerActionName);
-            dictionaryResult.ShouldHaveKey(SpecialNames.DefaultValues.RouteValueServiceName ).ShouldBe(serviceName);
-            dictionaryResult.ShouldHaveKey(SpecialNames.DefaultValues.RouteValueMethodName  ).ShouldBe(methodName);
+            dictionaryResult.ShouldHaveKey("controller").ShouldBe(ComponentAsServiceConfiguration.DefaultValues.ComponentAsServiceControllerName);
+            dictionaryResult.ShouldHaveKey("action").ShouldBe(ComponentAsServiceConfiguration.DefaultValues.ComponentAsServiceControllerActionName);
+            dictionaryResult.ShouldHaveKey(ComponentAsServiceConfiguration.DefaultValues.RouteValueServiceNameKey ).ShouldBe(serviceName);
+            dictionaryResult.ShouldHaveKey(ComponentAsServiceConfiguration.DefaultValues.RouteValueMethodNameKey  ).ShouldBe(methodName);
+            httpResult.StatusCode.ShouldBe(HttpStatusCode.OK);
         }
 
         
@@ -63,8 +81,9 @@ namespace ComponentAsService.Specs
             console.QuoteLine(stringResult);
             var dictionaryResult = JsonConvert.DeserializeObject<RouteValueDictionary>(stringResult);
 
-            paramDict.ShouldAll(kv => dictionaryResult.ContainsKey(kv.Key));
+            paramDict.ShouldAll(kv => dictionaryResult.ShouldContainKey(kv.Key));
             paramDict.ShouldAll(kv => dictionaryResult[kv.Key].ShouldBe(  $"{kv.Value}"));
+            httpResult.StatusCode.ShouldBe(HttpStatusCode.OK);
         }
 
         [Theory]
@@ -79,7 +98,7 @@ namespace ComponentAsService.Specs
             result.ShouldBe( (a, b, c) );
         }
         
-        public ComponentAsServiceControllerRoutesAUrlToAComponentMethod(ITestOutputHelper console)
+        public ControllerRoutesAUrlToAServiceMethod(ITestOutputHelper console)
         {
             this.console = console;
             client = GivenClientForRunningServer<WhiteBoxStartup>();

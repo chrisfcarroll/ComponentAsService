@@ -19,11 +19,12 @@ namespace ComponentAsService
         public IServiceCollection Services { get; private set;}
         public IServiceProvider ServiceProvider { get; private set; }
         public IHostingEnvironment HostingEnvironment { get; private set;}
+        public ComponentAsServiceConfiguration CaSConfiguration { get; private set; }
 
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddLogging();
-            services.AddComponentAsService();
+            services.AddComponentAsService(CaSConfiguration = ComponentAsServiceConfiguration.DefaultValues);
             services.AddScoped<ComponentAsServiceDiagnosticsB>();
             Services = services;
         }

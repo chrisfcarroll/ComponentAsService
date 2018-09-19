@@ -10,17 +10,21 @@ namespace ComponentAsService
 {
     public class ComponentAsServiceController : Controller
     {
-        public static readonly string[] ReservedRouteValueNames = new []{"service","method","controller","action"};
-        
         readonly IServiceCollection services;
         readonly IServiceProvider serviceProvider;
         readonly ILogger logger;
+        readonly ComponentAsServiceConfiguration configuration;
 
-        public ComponentAsServiceController(IServiceCollection services, IServiceProvider serviceProvider ,ILogger<ComponentAsServiceController> logger  )
+        public ComponentAsServiceController(
+            IServiceCollection services, 
+            IServiceProvider serviceProvider,
+            ILogger<ComponentAsServiceController> logger, 
+            ComponentAsServiceConfiguration configuration)
         {
             this.services = services;
             this.serviceProvider = serviceProvider;
             this.logger = logger;
+            this.configuration = configuration;
         }
         
         public object Serve()
@@ -28,19 +32,16 @@ namespace ComponentAsService
             logger.LogDebug("ActionDescriptor {ActionDescriptor}", ControllerContext.ActionDescriptor);
             logger.LogDebug("RouteData {RouteData}", ControllerContext.RouteData);
 
-            var serviceName = RouteData.Values["service"] as string;
-            var methodName  = RouteData.Values["method"] as string;
-            var serviceType = 
-                services.Where(s => s.ServiceType.Name == serviceName).Select(s=>s.ServiceType).FirstOrDefault()
-                     ?? throw new ArgumentException(
-                            $"Didn't find a service of type {serviceName}. Use StartUp.ConfigureServices() to add it to the service collection?"
-                           );
+            var serviceName = RouteData.Values[configuration.RouteValueServiceNameKey] as string;
+            var methodName  = RouteData.Values[configuration.RouteValueMethodNameKey] as string;
+            var serviceType = SelectServiceTypeByName(serviceName);
             var implementation = serviceProvider.GetService(serviceType);
-            var routedValues= RouteData.Values.Where(kv => kv.Key.IsInList(ReservedRouteValueNames ));
-            
             var query   = Request.Query.ToDictionary(q => q.Key, q => (object)string.Join(",", q.Value));
-            var values  = RouteData.Values.Where(kv => kv.Key.IsNotInList(ReservedRouteValueNames ));
-            var args    = values.Union(query).ToDictionary(kv => kv.Key, kv => kv.Value);
+            var form = Request.HasFormContentType
+                ? Request.Form.ToDictionary(q => q.Key, q => (object) string.Join(",", q.Value))
+                : new Dictionary<string, object>();
+            var values  = RouteData.Values.Where(kv => kv.Key.IsNotInList(configuration.RouteValuesKeysIgnoredForParameterMatching ));
+            var args    = values.Union(query).Union(form).ToDictionary(kv => kv.Key, kv => kv.Value);
                         
             var method = serviceType.GetMethodsByNameAndParameterAssignability(methodName, args).FirstOrDefault();
             if (method != null)
@@ -54,10 +55,11 @@ namespace ComponentAsService
                 method = serviceType.GetMethodsWithOneDictionaryParameter(methodName, args).FirstOrDefault();
                 if (method != null)
                 {
+                    var nonParameterRouteValues= RouteData.Values.Where(kv => kv.Key.IsInList(configuration.RouteValuesKeysIgnoredForParameterMatching ));
                     var argsToUse =
-                        (method.GetParameters().First().Name == SpecialNames.DefaultValues.SpecialParameterNameForAllMvcRouteValues
+                        (method.GetParameters().First().Name == ComponentAsServiceConfiguration.DefaultValues.DiagnosticParameterNameForAllMvcRouteValues
                       && method.GetParameters().First().ParameterType == typeof(Dictionary<string, object>))
-                            ? args.Union(routedValues).ToDictionary(kv => kv.Key, kv => kv.Value)
+                            ? args.Union(nonParameterRouteValues).ToDictionary(kv => kv.Key, kv => kv.Value)
                             : args;
                     
                     try{ return method.Invoke(implementation, new object[]{argsToUse}); }
@@ -81,6 +83,16 @@ namespace ComponentAsService
             
             logger.LogError(ex, ex.Message);
             throw ex;
+        }
+
+        protected virtual Type SelectServiceTypeByName(string serviceName)
+        {
+            return services.Where(s => s.ServiceType.Name == serviceName)
+                       .Select(s=>s.ServiceType).FirstOrDefault()
+                   ?? services.Where(s => s.ServiceType.Name[0]=='I' && s.ServiceType.Name.Substring(1) == serviceName)
+                       .Select(s=>s.ServiceType).FirstOrDefault()
+                   ?? throw new ArgumentException(
+                       $"Didn't find a service of type {serviceName}. Use StartUp.ConfigureServices() to add it to the service collection?");
         }
 
         static Dictionary<(Type,string),MethodInfo> methodsCache= new Dictionary<(Type, string), MethodInfo>();

@@ -8,9 +8,9 @@ using Xunit;
 using Xunit.Abstractions;
 using Assert = Xunit.Assert;
 
-namespace ComponentAsService.Specs
+namespace ComponentAsService.Specs.WhenServing
 {
-    public class ComponentAsServiceControllerThrowsIfItCannotRouteAUrl
+    public class ControllerThrowsIfItCannotRouteAUrl
     {
         readonly ITestOutputHelper console;
 
@@ -21,7 +21,7 @@ namespace ComponentAsService.Specs
             new WhiteBoxStartup(new ConfigurationBuilder().Build()).ConfigureServices(serviceCollection);
             var serviceProvider = serviceCollection.BuildServiceProvider();
             var controller= 
-                new ComponentAsServiceController(serviceCollection, serviceProvider, serviceProvider.GetService<ILogger<ComponentAsServiceController>>())
+                new ComponentAsServiceController(serviceCollection, serviceProvider, serviceProvider.GetService<ILogger<ComponentAsServiceController>>(), ComponentAsServiceConfiguration.DefaultValues)
                     .WithControllerContext("Serve", new {service = "FakeNonExistentService", method = "method"});
 
             controller.ControllerContext.RouteData= new RouteData();                                                          
@@ -40,7 +40,7 @@ namespace ComponentAsService.Specs
             new WhiteBoxStartup(new ConfigurationBuilder().Build()).ConfigureServices(serviceCollection);
             var serviceProvider = serviceCollection.BuildServiceProvider();
             var controller= 
-                new ComponentAsServiceController(serviceCollection, serviceProvider, serviceProvider.GetService<ILogger<ComponentAsServiceController>>())
+                new ComponentAsServiceController(serviceCollection, serviceProvider, serviceProvider.GetService<ILogger<ComponentAsServiceController>>(), ComponentAsServiceConfiguration.DefaultValues)
                    .WithControllerContext("Serve", new {service = nameof(IComponentAsServiceDiagnostics), method = "NonExistentMethod"});
             controller.ControllerContext.RouteData= new RouteData();                                                          
             controller.ControllerContext.RouteData.Values.Add("service",nameof(IComponentAsServiceDiagnostics));
@@ -51,6 +51,6 @@ namespace ComponentAsService.Specs
             ex.Message.ShouldContain("NonExistentMethod");
         }
 
-        public ComponentAsServiceControllerThrowsIfItCannotRouteAUrl(ITestOutputHelper console) => this.console = console;
+        public ControllerThrowsIfItCannotRouteAUrl(ITestOutputHelper console) => this.console = console;
     }
 }
