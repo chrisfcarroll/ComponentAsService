@@ -18,7 +18,7 @@ namespace ComponentAsService.Specs
         public async Task Method_AddComponentAsService_CallsAddMvc()
         {
             var client=GivenClientForRunningServer<StartupUsingAddServeItWithoutAddMvc>().ShouldNotBeNull();
-            var httpResult= await client.GetAsync($"{nameof(IComponentAsServiceDiagnostics)}/{nameof(IComponentAsServiceDiagnostics.ShowRouteValues)}");
+            var httpResult= await client.GetAsync($"{nameof(IComponentAsServiceDiagnostics)}/{nameof(IComponentAsServiceDiagnostics.GetRouteValues)}");
             var stringResult = await httpResult.Content.ReadAsStringAsync();
             console.QuoteLine(stringResult);            
         }

@@ -5,11 +5,11 @@ namespace ExampleComponent
 {
     public interface IExemplify
     {
-        List<int> GetSomeNumbers(string name);
+        List<int> StringToNumbers(string @string);
     }
     
     public class ExampleImp : IExemplify
     {
-        public List<int> GetSomeNumbers(string name) { return name.Select(c => (int) c).ToList(); }
+        public List<int> StringToNumbers(string @string) { return @string.Select(c => (int) c).ToList(); }
     }
 }

@@ -15,7 +15,7 @@ namespace ComponentAsService.Specs
         readonly ITestOutputHelper console;
 
         [Theory]
-        [InlineData(nameof(IComponentAsServiceDiagnostics),nameof(IComponentAsServiceDiagnostics.ShowRouteValues))]
+        [InlineData(nameof(IComponentAsServiceDiagnostics),nameof(IComponentAsServiceDiagnostics.GetRouteValues))]
         public async Task Serve_IdentifiesServiceAndMethodFromRoute(string serviceName, string methodName)
         {
             var httpResult= await client.GetAsync($"{serviceName}/{methodName}?name=input&number=2");
@@ -28,7 +28,7 @@ namespace ComponentAsService.Specs
         }
         
         [Theory]
-        [InlineData(nameof(IComponentAsServiceDiagnostics),nameof(IComponentAsServiceDiagnostics.ShowRouteValues))]
+        [InlineData(nameof(IComponentAsServiceDiagnostics),nameof(IComponentAsServiceDiagnostics.GetRouteValues))]
         public async Task Serve_TreatsSpecialParameterNameForAllMvcRouteValuesSpecially(string serviceName, string methodName)
         {
             var httpResult= await client.GetAsync($"{serviceName}/{methodName}?name=input&number=2");
@@ -48,7 +48,7 @@ namespace ComponentAsService.Specs
 
         
         [Theory]
-        [InlineData(nameof(IComponentAsServiceDiagnostics),nameof(IComponentAsServiceDiagnostics.ShowRouteValues), "p1", "p1", "p2",2, "p3",3)]
+        [InlineData(nameof(IComponentAsServiceDiagnostics),nameof(IComponentAsServiceDiagnostics.GetRouteValues), "p1", "p1", "p2",2, "p3",3)]
         public async Task Serve_ParsesQueryStringToADictionary(string serviceName, string methodName, params object[] data)
         {
             var paramDict= new Dictionary<string,object>();

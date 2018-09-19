@@ -4,7 +4,7 @@ namespace ComponentAsService
 {
     public interface IComponentAsServiceDiagnostics
     {
-        Dictionary<string, object> ShowRouteValues(Dictionary<string, object> allMvcRouteValues);
+        Dictionary<string, object> GetRouteValues(Dictionary<string, object> allMvcRouteValues);
         (string, string)           GetParameters(string a, string b);
         (string, int)              GetParameters(string a, int b);
         (object, object, object)   GetParameters(object a, object b, object c);
@@ -18,7 +18,7 @@ namespace ComponentAsService
     
     public class ComponentAsServiceDiagnostics : IComponentAsServiceDiagnostics 
     {
-        public Dictionary<string, object> ShowRouteValues(Dictionary<string, object> allMvcRouteValues) => allMvcRouteValues;
+        public Dictionary<string, object> GetRouteValues(Dictionary<string, object> allMvcRouteValues) => allMvcRouteValues;
         public (string, string)           GetParameters(string a, string b)                             => (a, b);
         public (string, int)              GetParameters(string a, int b)                                => (a, b);
         public (object, object, object)   GetParameters(object a, object b, object c)                   => (a, b, c);
