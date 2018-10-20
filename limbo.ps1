@@ -11,15 +11,14 @@ echo @'
 #vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 # Bash Start -----------------------------------------------------------
 
-[[ -x clip.exe ]] && clip=clip.exe || clip=pbcopy
-
 dotnet test --no-restore  ./ComponentAsService2.Specs
 
 if [[ $? -eq 0 ]] ; then 
 
     git add :/
-    git diff --cached -U1 --stat | $clip
-    echo "Enter your commit message in the editor. $(git diff --cached -U1 --stat) is on the clipboard"
+    git diff --cached -U1
+    git diff --cached --stat
+    echo "Enter your commit message in the editor."
     git commit 
 
 else
@@ -42,8 +41,9 @@ dotnet test --no-restore  .\ComponentAsService2.Specs\
 if($?){ 
 
     git add :/
-    git diff --cached -U1 --stat | clip.exe
-    Write-Host "Enter your commit message in the editor. `$(git diff --cached -U1 --stat) is on the clipboard"
+    git diff --cached -U1
+    git diff --cached --stat
+    Write-Host "Enter your commit message in the editor."
     git commit 
 
 }else{

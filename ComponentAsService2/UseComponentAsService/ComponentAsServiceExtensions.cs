@@ -1,12 +1,10 @@
 ﻿using System.Linq;
 using System.Reflection;
-using ComponentAsService2.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace ComponentAsService2
+namespace ComponentAsService2.UseComponentAsService
 {
     public static class ComponentAsServiceExtensions
     {
@@ -18,7 +16,9 @@ namespace ComponentAsService2
             AddComponentAsService(this IServiceCollection services, params TypeInfo[] componentTypesToServe)
         {
             var mvcBuilder = services.AddMvc();
-            return AddAnythingCanBeAController(mvcBuilder, componentTypesToServe);            
+            AddAnythingCanBeAController(mvcBuilder, componentTypesToServe);
+            mvcBuilder.AddComponentAsService(typeof(ComponentAsServiceDiagnostics).GetTypeInfo());
+            return mvcBuilder;
         } 
 
         /// <summary>Add the <see cref="AnythingCanBeControllersFeatureProvider"/> so that components can be served as controllers</summary>
