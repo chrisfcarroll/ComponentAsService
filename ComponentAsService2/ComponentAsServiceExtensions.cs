@@ -14,6 +14,17 @@ namespace ComponentAsService2
         /// <param name="mvcBuilder"></param>
         /// <param name="componentTypesToServe"></param>
         /// <returns><paramref name="mvcBuilder"/></returns>
+        public static IMvcBuilder
+            AddComponentAsService(this IServiceCollection services, params TypeInfo[] componentTypesToServe)
+        {
+            var mvcBuilder = services.AddMvc();
+            return AddAnythingCanBeAController(mvcBuilder, componentTypesToServe);            
+        } 
+
+        /// <summary>Add the <see cref="AnythingCanBeControllersFeatureProvider"/> so that components can be served as controllers</summary>
+        /// <param name="mvcBuilder"></param>
+        /// <param name="componentTypesToServe"></param>
+        /// <returns><paramref name="mvcBuilder"/></returns>
         public static IMvcBuilder 
             AddComponentAsService(this IMvcBuilder mvcBuilder, params TypeInfo[] componentTypesToServe) 
                 => AddAnythingCanBeAController(mvcBuilder, componentTypesToServe);

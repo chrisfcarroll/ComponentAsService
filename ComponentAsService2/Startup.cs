@@ -35,8 +35,9 @@ namespace ComponentAsService2
             });
             services
                .AddMvc()
-               .SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
-               .AddComponentAsService();
+               .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+
+            services.AddComponentAsService();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
