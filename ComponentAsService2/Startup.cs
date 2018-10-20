@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
-using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -34,15 +33,10 @@ namespace ComponentAsService2
                 options.CheckConsentNeeded = context => true;
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
-
-            var mvcBuilder = services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-            
-            var featureProviders = mvcBuilder.PartManager.FeatureProviders;
-            var controllerFeatureProvider = featureProviders.OfType<ControllerFeatureProvider>().FirstOrDefault();
-            featureProviders.Remove(controllerFeatureProvider);
-            var moreControllers = new AnythingCanBeControllersFeatureProvider();
-            featureProviders.Add(moreControllers);
-            moreControllers.Add(typeof(Calculator).GetTypeInfo());
+            services
+               .AddMvc()
+               .SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
+               .AddComponentAsService();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -68,6 +62,8 @@ namespace ComponentAsService2
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
+            
+            app.UseComponentAsService<Calculator>();
         }
     }
 

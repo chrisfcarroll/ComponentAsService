@@ -23,6 +23,8 @@ namespace ComponentAsService2
 
         TypeInfo[] moreControllerTypes;
         
+        public void Add(IEnumerable<TypeInfo> typeInfos) => moreControllerTypes = moreControllerTypes.Union( typeInfos ).ToArray();
+
         public void Add(TypeInfo item) => moreControllerTypes = moreControllerTypes.Union(new[] {item}).ToArray();
 
         public void Clear() => moreControllerTypes = new TypeInfo[0];
