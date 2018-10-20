@@ -1,14 +1,9 @@
-﻿using System;
-using System.Reflection;
-using System.Threading.Tasks;
-using ComponentAsService2.Services;
+﻿using ComponentAsService2.Services;
 using ComponentAsService2.UseComponentAsService;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 

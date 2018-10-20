@@ -9,9 +9,9 @@ namespace ComponentAsService2.UseComponentAsService
     public static class ComponentAsServiceExtensions
     {
         /// <summary>Add the <see cref="AnythingCanBeControllersFeatureProvider"/> so that components can be served as controllers</summary>
-        /// <param name="mvcBuilder"></param>
+        /// <param name="services"></param>
         /// <param name="componentTypesToServe"></param>
-        /// <returns><paramref name="mvcBuilder"/></returns>
+        /// <returns><paramref name="services"/></returns>
         public static IMvcBuilder
             AddComponentAsService(this IServiceCollection services, params TypeInfo[] componentTypesToServe)
         {
@@ -29,15 +29,15 @@ namespace ComponentAsService2.UseComponentAsService
             AddComponentAsService(this IMvcBuilder mvcBuilder, params TypeInfo[] componentTypesToServe) 
                 => AddAnythingCanBeAController(mvcBuilder, componentTypesToServe);
 
-        /// <summary>Enable types <paramref name="moreControllers"/> to be served as Controllers.</summary>
+        /// <summary>Enable types <paramref name="componentTypesToServe"/> to be served as Controllers.</summary>
         /// <param name="app"></param>
-        /// <param name="moreControllers"></param>
+        /// <param name="componentTypesToServe"></param>
         /// <returns><paramref name="app"/></returns>
         public static IApplicationBuilder 
             UseComponentAsService(this IApplicationBuilder app, params TypeInfo[] componentTypesToServe)
                 => UseAsAController(app, componentTypesToServe);
 
-        /// <summary>Enable types <paramref name="moreControllers"/> to be served as Controllers.</summary>
+        /// <summary>Enable type <typeparamref name="TComponent"/> to be served as Controllers.</summary>
         /// <param name="app"></param>
         /// <typeparam name="TComponent">A component Type to be served by the web application</typeparam>
         /// <returns><paramref name="app"/></returns>
@@ -45,7 +45,7 @@ namespace ComponentAsService2.UseComponentAsService
             UseComponentAsService<TComponent>(this IApplicationBuilder app)
                 => UseAsAController(app, typeof(TComponent).GetTypeInfo());
 
-        /// <summary>Enable types <paramref name="moreControllers"/> to be served as Controllers.</summary>
+        /// <summary>Enable types <typeparamref name="TComponent1"/> ... <typeparamref name="TComponent2"/>  to be served as Controllers.</summary>
         /// <param name="app"></param>
         /// <typeparam name="TComponent1">A component Type to be served by the web application</typeparam>
         /// <typeparam name="TComponent2">A component Type to be served by the web application</typeparam>
@@ -54,7 +54,7 @@ namespace ComponentAsService2.UseComponentAsService
             UseComponentAsService<TComponent1,TComponent2>(this IApplicationBuilder app)
             => UseAsAController(app, typeof(TComponent1).GetTypeInfo(),typeof(TComponent2).GetTypeInfo());
 
-        /// <summary>Enable types <paramref name="moreControllers"/> to be served as Controllers.</summary>
+        /// <summary>Enable types <typeparamref name="TComponent1"/> ... <typeparamref name="TComponent3"/>  to be served as Controllers.</summary>
         /// <param name="app"></param>
         /// <typeparam name="TComponent1">A component Type to be served by the web application</typeparam>
         /// <typeparam name="TComponent2">A component Type to be served by the web application</typeparam>
