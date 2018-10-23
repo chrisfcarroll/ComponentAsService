@@ -37,10 +37,20 @@ namespace ComponentAsService2.UseComponentAsService
         /// <returns>A list of the best matching actions.</returns>
         protected override IReadOnlyList<ActionDescriptor> SelectBestActions(IReadOnlyList<ActionDescriptor> actions)
         {
-            var count = actions.Count;
-            logger.LogDebug($"SelectBestActions( resolving best of {count} actions)");
-            if(count!=1)logger.LogDebug( actions.ToJson());
-            return base.SelectBestActions(actions);
+            if (actions?.Count > 1)
+            {
+                var count = actions.Count;
+                logger.LogDebug($"SelectBestActions( resolving best of {count} actions)");
+                if (count != 1)
+                {
+                    logger.LogDebug( actions.ToJson());
+                }
+                return base.SelectBestActions(actions);
+            }
+            else
+            {
+                return base.SelectBestActions(actions);
+            }
         }
 
         class StringArrayComparer : IEqualityComparer<string[]>
