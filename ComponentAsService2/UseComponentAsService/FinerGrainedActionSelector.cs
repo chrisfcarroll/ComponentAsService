@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Internal;
@@ -10,7 +12,11 @@ namespace ComponentAsService2.UseComponentAsService
 {
     public class FinerGrainedActionSelector : ActionSelector
     {
+        public delegate ActionDescriptor SelectBestOneOfActionsDelegate(ILogger logger, IReadOnlyList<ActionDescriptor> actions);
+
         readonly ILogger<FinerGrainedActionSelector> logger;
+
+        SelectBestOneOfActionsDelegate _selectBestOneOfSeveralActionsStrategy = (logger, actions) => actions.First();
 
         /// <summary>
         /// Creates a new <see cref="FinerGrainedActionSelector"/>, which
@@ -30,28 +36,25 @@ namespace ComponentAsService2.UseComponentAsService
             logger = loggerFactory.CreateLogger<FinerGrainedActionSelector>();
         }
 
+        /// <summary>This Strategy is called by <see cref="SelectBestActions"/> if and only if there is
+        /// more than one action to choose from. 
+        /// The default implementation simply picks the first one.
+        /// </summary>
+        public SelectBestOneOfActionsDelegate SelectBestOneOfSeveralActionsStrategy
+        {
+            get { return _selectBestOneOfSeveralActionsStrategy;}
+            set { 
+                _selectBestOneOfSeveralActionsStrategy = value ?? ((l, a) => a.First());
+            }
+        }
+
 
         /// <inheritdoc />
-        /// <summary>Returns the set of best matching actions.</summary>
+        /// <summary>Calls <see cref="SelectBestOneOfSeveralActionsStrategy"/> to returns the single best matching action.</summary>
         /// <param name="actions">The set of actions that satisfy all constraints.</param>
         /// <returns>A list of the best matching actions.</returns>
         protected override IReadOnlyList<ActionDescriptor> SelectBestActions(IReadOnlyList<ActionDescriptor> actions)
-        {
-            if (actions?.Count > 1)
-            {
-                var count = actions.Count;
-                logger.LogDebug($"SelectBestActions( resolving best of {count} actions)");
-                if (count != 1)
-                {
-                    logger.LogDebug( actions.ToJson());
-                }
-                return base.SelectBestActions(actions);
-            }
-            else
-            {
-                return base.SelectBestActions(actions);
-            }
-        }
+            => actions?.Count>1 ? new []{ _selectBestOneOfSeveralActionsStrategy(logger, actions)} : actions;
 
         class StringArrayComparer : IEqualityComparer<string[]>
         {
@@ -91,6 +94,43 @@ namespace ComponentAsService2.UseComponentAsService
                     hashCodeCombiner.Add(obj[index], _valueComparer);
                 return hashCodeCombiner.CombinedHash;
             }
+        }
+    }
+
+    public class SelectActionByParameterNameAndConvertibility
+    {
+        public static FinerGrainedActionSelector.SelectBestOneOfActionsDelegate Apply
+            = (logger, actions) => actions.OrderByDescending(Score).First();
+
+        static object TryConvert(Type toType, string fromString)
+        {
+            try
+            {
+                return TypeDescriptor.GetConverter(toType).ConvertFromString(fromString);
+            }
+            catch{ return null; }
+        }
+
+        public static int Score(ActionDescriptor action)
+        {
+            var actualParameters = action.RouteValues;
+            var expectedParameters = action.Parameters?.Select(p => new {p.Name, p.ParameterType});
+            var convertibleMatches =
+                expectedParameters==null
+                    ? 0 
+                    :actualParameters
+                        .Join(expectedParameters,
+                            kv => kv.Key, nt => nt.Name,
+                            (a, e) => new
+                            {
+                                a.Key,
+                                e.ParameterType,
+                                Value = TryConvert(e.ParameterType,a.Value),
+                            })
+                        .Count(x=>x.Value!=null);
+
+            var mismatches = actualParameters.Count + (expectedParameters?.Count()??0) - 2 * convertibleMatches;
+            return -mismatches;
         }
     }
 }

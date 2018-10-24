@@ -26,72 +26,106 @@ using Assert = Xunit.Assert;
 
 namespace ComponentAsService2.Specs
 {
+    public class SelectActionByParameterNameAndConvertibilitySpecs
+    {
+    }
+
     public class FinerGrainedActionSelectorSpecs
     {
-
         [Fact]
-        public void SelectBestCandidate_AmbiguousActions_LogIsCorrect_UntilItIsnt()
+        public void SelectActionByParameterNameAndConvertibilityStrategy_CanOverride()
         {
             // Arrange
-            var logLines = new StringListLogger();
-            var loggerFactory = new LoggerFactory().AddStringListLogger(logLines);
-
+            var loglines= new List<string>();
+            var loggerFactory = new LoggerFactory().AddStringListLogger(loglines);
             var actions = new ActionDescriptor[]
             {
                 new ActionDescriptor() { DisplayName = "A1" },
                 new ActionDescriptor() { DisplayName = "A2" },
             };
-            var selector = CreateSelector(actions, loggerFactory);
-
             var routeContext = CreateRouteContext("POST");
-            var actionNames = string.Join(Environment.NewLine, actions.Select(action => action.DisplayName));
-            var expectedMessage = $"Request matched multiple actions resulting in ambiguity. Matching actions:";
+            var selector = CreateSelector(actions,loggerFactory);
 
             // Act
-            Assert.Throws<AmbiguousActionException>(() => { selector.SelectBestCandidate(routeContext, actions); });
+            selector.SelectBestOneOfSeveralActionsStrategy
+                = SelectActionByParameterNameAndConvertibility.Apply;
 
-            // Assert
-            logLines.Scopes.ShouldBeEmpty();
-            var lastLine = logLines.LoggedLines
-                                   .LastOrDefault()
-                                   .ShouldNotBeNull();
-            actions.Select(a => a.DisplayName).ShouldAll(n => lastLine.ShouldContain(n));
+            selector
+                .SelectBestCandidate(routeContext, actions)
+                .ShouldNotBeNull()
+                .ShouldBeOneOf(actions);
+        }
+
+        [Fact]
+        public void SelectBestOneOfSeveralActionsStrategy_CanBeOverridden()
+        {
+            // Arrange
+            var loglines= new List<string>();
+            var loggerFactory = new LoggerFactory().AddStringListLogger(loglines);
+            var actions = new ActionDescriptor[]
+            {
+                new ActionDescriptor() { DisplayName = "A1" },
+                new ActionDescriptor() { DisplayName = "A2" },
+            };
+            var routeContext = CreateRouteContext("POST");
+            var selector = CreateSelector(actions,loggerFactory);
+
+            // Act
+            selector.SelectBestOneOfSeveralActionsStrategy = (l, a) =>
+            {
+                l.Log(LogLevel.Information, "Here!");
+                return a.FirstOrDefault();
+            };
+
+            selector
+                .SelectBestCandidate(routeContext, actions)
+                .ShouldNotBeNull()
+                .ShouldBeOneOf(actions);
+
+            loglines.SingleOrAssertFail("Should have logged 1 line").ShouldContain("Here!");
+        }
+
+
+        [Fact]
+        public void SelectBestCandidate_AmbiguousActions_DefaultImplementationChoosesOne()
+        {
+            // Arrange
+            var actions = new ActionDescriptor[]
+            {
+                new ActionDescriptor() { DisplayName = "A1" },
+                new ActionDescriptor() { DisplayName = "A2" },
+            };
+            var selector = CreateSelector(actions);
+            var routeContext = CreateRouteContext("POST");
+
+            // Act
+            selector
+                .SelectBestCandidate(routeContext, actions)
+                .ShouldNotBeNull()
+                .ShouldBeOneOf(actions);
         }
         
         [Fact]
-        public void SelectBestCandidate_Ambiguous()
+        public void SelectBestCandidate_Ambiguous_DefaultImplementationChoosesOne()
         {
             // Arrange
-            var expectedMessage =
-                "Multiple actions matched. " +
-                "The following actions matched route data and had all constraints satisfied:" + Environment.NewLine +
-                Environment.NewLine +
-                "Ambiguous1" + Environment.NewLine +
-                "Ambiguous2";
-
             var actions = new ActionDescriptor[]
             {
                 CreateAction(area: null, controller: "Store", action: "Buy"),
                 CreateAction(area: null, controller: "Store", action: "Buy"),
             };
-
             actions[0].DisplayName = "Ambiguous1";
             actions[1].DisplayName = "Ambiguous2";
-
             var selector = CreateSelector(actions);
             var context = CreateRouteContext("GET");
-
             context.RouteData.Values.Add("controller", "Store");
             context.RouteData.Values.Add("action", "Buy");
 
             // Act
-            var ex = Assert.Throws<AmbiguousActionException>(() =>
-            {
-                selector.SelectBestCandidate(context, actions);
-            });
-
-            // Assert
-            Assert.Equal(expectedMessage, ex.Message);
+            selector
+                .SelectBestCandidate(context, actions)
+                .ShouldNotBeNull()
+                .ShouldBeOneOf(actions);
         }
 
         ControllerActionDescriptor InvokeActionSelector(RouteContext context)

@@ -456,8 +456,8 @@ namespace ComponentAsService2.Specs.Tests.Microsoft.AspNetCore.Mvc.Infrastructur
             Assert.Same(actions[0], action);
         }
 
-        [Fact]
-        public void SelectBestCandidate_AmbiguousActions_LogIsCorrect_UntilItIsnt()
+        [NotAFact("Is a fact about Microsoft.AspNetCore.Mvc.Internal.ActionSelector but not about FinerGrainedActionSelector")]
+        public void SelectBestCandidate_AmbiguousActions_Log()
         {
             // Arrange
             var sink = new TestSink();
@@ -739,7 +739,7 @@ namespace ComponentAsService2.Specs.Tests.Microsoft.AspNetCore.Mvc.Infrastructur
             Assert.Same(action, best);
         }
 
-        [Fact]
+        [NotAFact("Is a fact about Microsoft.AspNetCore.Mvc.Internal.ActionSelector but not about FinerGrainedActionSelector")]
         public void SelectBestCandidate_Fallback_ToActionWithoutConstraints()
         {
             // Arrange
@@ -777,7 +777,7 @@ namespace ComponentAsService2.Specs.Tests.Microsoft.AspNetCore.Mvc.Infrastructur
             Assert.Same(action, best);
         }
 
-        [Fact]
+        [NotAFact("Is a fact about Microsoft.AspNetCore.Mvc.Internal.ActionSelector but not about FinerGrainedActionSelector")]
         public void SelectBestCandidate_Ambiguous()
         {
             // Arrange
@@ -921,7 +921,7 @@ namespace ComponentAsService2.Specs.Tests.Microsoft.AspNetCore.Mvc.Infrastructur
             Assert.Equal(actionName, result.ActionName);
         }
 
-        private ControllerActionDescriptor InvokeActionSelector(RouteContext context)
+        ControllerActionDescriptor InvokeActionSelector(RouteContext context)
         {
             var actionDescriptorProvider = GetActionDescriptorProvider();
             var actionDescriptorCollectionProvider = new DefaultActionDescriptorCollectionProvider(
@@ -942,7 +942,7 @@ namespace ComponentAsService2.Specs.Tests.Microsoft.AspNetCore.Mvc.Infrastructur
             return (ControllerActionDescriptor)actionSelector.SelectBestCandidate(context, candidates);
         }
 
-        private ControllerActionDescriptorProvider GetActionDescriptorProvider()
+        ControllerActionDescriptorProvider GetActionDescriptorProvider()
         {
             var controllerTypes = typeof(ActionSelectorTest)
                 .GetNestedTypes(BindingFlags.NonPublic)
@@ -963,7 +963,7 @@ namespace ComponentAsService2.Specs.Tests.Microsoft.AspNetCore.Mvc.Infrastructur
             return provider;
         }
 
-        private static ApplicationPartManager GetApplicationManager(List<TypeInfo> controllerTypes)
+        static ApplicationPartManager GetApplicationManager(List<TypeInfo> controllerTypes)
         {
             var manager = new ApplicationPartManager();
             manager.ApplicationParts.Add(new TestApplicationPart(controllerTypes));
@@ -971,14 +971,14 @@ namespace ComponentAsService2.Specs.Tests.Microsoft.AspNetCore.Mvc.Infrastructur
             return manager;
         }
 
-        private static HttpContext GetHttpContext(string httpMethod)
+        static HttpContext GetHttpContext(string httpMethod)
         {
             var httpContext = new DefaultHttpContext();
             httpContext.Request.Method = httpMethod;
             return httpContext;
         }
 
-        private static ActionDescriptor[] GetActions()
+        static ActionDescriptor[] GetActions()
         {
             return new ActionDescriptor[]
             {
@@ -996,7 +996,7 @@ namespace ComponentAsService2.Specs.Tests.Microsoft.AspNetCore.Mvc.Infrastructur
             };
         }
 
-        private static IEnumerable<ActionDescriptor> GetActions(
+        static IEnumerable<ActionDescriptor> GetActions(
             IEnumerable<ActionDescriptor> actions,
             string area,
             string controller,
@@ -1011,7 +1011,7 @@ namespace ComponentAsService2.Specs.Tests.Microsoft.AspNetCore.Mvc.Infrastructur
                 .Where(a => a.RouteValues.Any(kvp => kvp.Key == "action" && comparer.Equals(kvp.Value, action)));
         }
 
-        private static ActionSelector CreateSelector(IReadOnlyList<ActionDescriptor> actions, ILoggerFactory loggerFactory = null)
+        static ActionSelector CreateSelector(IReadOnlyList<ActionDescriptor> actions, ILoggerFactory loggerFactory = null)
         {
             loggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
 
@@ -1032,12 +1032,12 @@ namespace ComponentAsService2.Specs.Tests.Microsoft.AspNetCore.Mvc.Infrastructur
                 loggerFactory);
         }
 
-        private static VirtualPathContext CreateContext(object routeValues)
+        static VirtualPathContext CreateContext(object routeValues)
         {
             return CreateContext(routeValues, ambientValues: null);
         }
 
-        private static VirtualPathContext CreateContext(object routeValues, object ambientValues)
+        static VirtualPathContext CreateContext(object routeValues, object ambientValues)
         {
             return new VirtualPathContext(
                 new Mock<HttpContext>(MockBehavior.Strict).Object,
@@ -1045,7 +1045,7 @@ namespace ComponentAsService2.Specs.Tests.Microsoft.AspNetCore.Mvc.Infrastructur
                 new RouteValueDictionary(routeValues));
         }
 
-        private static RouteContext CreateRouteContext(string httpMethod)
+        static RouteContext CreateRouteContext(string httpMethod)
         {
             var routeData = new RouteData();
             routeData.Routers.Add(new Mock<IRouter>(MockBehavior.Strict).Object);
@@ -1067,7 +1067,7 @@ namespace ComponentAsService2.Specs.Tests.Microsoft.AspNetCore.Mvc.Infrastructur
             };
         }
 
-        private static ActionDescriptor CreateAction(string area, string controller, string action)
+        static ActionDescriptor CreateAction(string area, string controller, string action)
         {
             var actionDescriptor = new ControllerActionDescriptor()
             {
@@ -1082,7 +1082,7 @@ namespace ComponentAsService2.Specs.Tests.Microsoft.AspNetCore.Mvc.Infrastructur
             return actionDescriptor;
         }
 
-        private static ActionConstraintCache GetActionConstraintCache(IActionConstraintProvider[] actionConstraintProviders = null)
+        static ActionConstraintCache GetActionConstraintCache(IActionConstraintProvider[] actionConstraintProviders = null)
         {
             var descriptorProvider = new DefaultActionDescriptorCollectionProvider(
                 Enumerable.Empty<IActionDescriptorProvider>(),
@@ -1090,7 +1090,7 @@ namespace ComponentAsService2.Specs.Tests.Microsoft.AspNetCore.Mvc.Infrastructur
             return new ActionConstraintCache(descriptorProvider, actionConstraintProviders.AsEnumerable() ?? new List<IActionConstraintProvider>());
         }
 
-        private class BooleanConstraint : IActionConstraint
+        class BooleanConstraint : IActionConstraint
         {
             public bool Pass { get; set; }
 
@@ -1102,7 +1102,7 @@ namespace ComponentAsService2.Specs.Tests.Microsoft.AspNetCore.Mvc.Infrastructur
             }
         }
 
-        private class ConstraintFactory : IActionConstraintFactory
+        class ConstraintFactory : IActionConstraintFactory
         {
             public IActionConstraint Constraint { get; set; }
 
@@ -1114,12 +1114,12 @@ namespace ComponentAsService2.Specs.Tests.Microsoft.AspNetCore.Mvc.Infrastructur
             }
         }
 
-        private class BooleanConstraintMarker : IActionConstraintMetadata
+        class BooleanConstraintMarker : IActionConstraintMetadata
         {
             public bool Pass { get; set; }
         }
 
-        private class BooleanConstraintProvider : IActionConstraintProvider
+        class BooleanConstraintProvider : IActionConstraintProvider
         {
             public int Order { get; set; }
 
@@ -1140,7 +1140,7 @@ namespace ComponentAsService2.Specs.Tests.Microsoft.AspNetCore.Mvc.Infrastructur
             }
         }
 
-        private class NonActionController
+        class NonActionController
         {
             [NonAction]
             public void Put()
@@ -1159,7 +1159,7 @@ namespace ComponentAsService2.Specs.Tests.Microsoft.AspNetCore.Mvc.Infrastructur
             }
         }
 
-        private class ActionNameController
+        class ActionNameController
         {
             [ActionName("CustomActionName_Verb")]
             public void Put()
@@ -1177,7 +1177,7 @@ namespace ComponentAsService2.Specs.Tests.Microsoft.AspNetCore.Mvc.Infrastructur
             }
         }
 
-        private class HttpMethodAttributeTests_RestOnlyController
+        class HttpMethodAttributeTests_RestOnlyController
         {
             [HttpGet]
             [HttpPut]
