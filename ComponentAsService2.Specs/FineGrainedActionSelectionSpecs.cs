@@ -12,21 +12,20 @@ namespace ComponentAsService2.Specs
         [Fact]
         public void SelectBestOneOfSeveralActionsStrategy_CanBeOverridden()
         {
+            var overridden = false;
             // Arrange
-            StringListLogger logger=new StringListLogger();
-            var loggerFactory = new LoggerFactory().AddStringListLogger(logger);
             var actions = new[]
             {
                 new ActionDescriptor { DisplayName = "A1" },
                 new ActionDescriptor { DisplayName = "A2" }
             };
             var routeContext = CreateRouteContext("POST");
-            var selector = CreateSelector(actions,loggerFactory);
+            var selector = CreateSelector(actions);
 
             // Act
             selector.SelectActionStrategy = (l, a) =>
             {
-                l.Log(LogLevel.Information, "Here!");
+                overridden=true;
                 return a.FirstOrDefault();
             };
 
@@ -35,7 +34,7 @@ namespace ComponentAsService2.Specs
                 .ShouldNotBeNull()
                 .ShouldBeOneOf(actions);
 
-            logger.LoggedLines.SingleOrAssertFail("Should have logged 1 line").ShouldContain("Here!");
+            overridden.ShouldBeTrue();
         }
 
 
