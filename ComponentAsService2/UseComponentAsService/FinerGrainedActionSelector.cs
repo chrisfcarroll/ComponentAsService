@@ -16,7 +16,7 @@ namespace ComponentAsService2.UseComponentAsService
 
         readonly ILogger<FinerGrainedActionSelector> logger;
 
-        SelectBestOneOfActionsDelegate _selectBestOneOfSeveralActionsStrategy = (logger, actions) => actions.First();
+        SelectBestOneOfActionsDelegate _selectActionStrategy = (logger, actions) => actions.First();
 
         /// <summary>
         /// Creates a new <see cref="FinerGrainedActionSelector"/>, which
@@ -40,21 +40,21 @@ namespace ComponentAsService2.UseComponentAsService
         /// more than one action to choose from. 
         /// The default implementation simply picks the first one.
         /// </summary>
-        public SelectBestOneOfActionsDelegate SelectBestOneOfSeveralActionsStrategy
+        public SelectBestOneOfActionsDelegate SelectActionStrategy
         {
-            get { return _selectBestOneOfSeveralActionsStrategy;}
+            get { return _selectActionStrategy;}
             set { 
-                _selectBestOneOfSeveralActionsStrategy = value ?? ((l, a) => a.First());
+                _selectActionStrategy = value ?? ((l, a) => a.First());
             }
         }
 
 
         /// <inheritdoc />
-        /// <summary>Calls <see cref="SelectBestOneOfSeveralActionsStrategy"/> to returns the single best matching action.</summary>
+        /// <summary>Calls <see cref="SelectActionStrategy"/> to returns the single best matching action.</summary>
         /// <param name="actions">The set of actions that satisfy all constraints.</param>
         /// <returns>A list of the best matching actions.</returns>
         protected override IReadOnlyList<ActionDescriptor> SelectBestActions(IReadOnlyList<ActionDescriptor> actions)
-            => actions?.Count>1 ? new []{ _selectBestOneOfSeveralActionsStrategy(logger, actions)} : actions;
+            => actions?.Count>1 ? new []{ _selectActionStrategy(logger, actions)} : actions;
 
         class StringArrayComparer : IEqualityComparer<string[]>
         {
@@ -102,19 +102,10 @@ namespace ComponentAsService2.UseComponentAsService
         public static FinerGrainedActionSelector.SelectBestOneOfActionsDelegate Apply
             = (logger, actions) => actions.OrderByDescending(Score).First();
 
-        static object TryConvert(Type toType, string fromString)
-        {
-            try
-            {
-                return TypeDescriptor.GetConverter(toType).ConvertFromString(fromString);
-            }
-            catch{ return null; }
-        }
-
         public static int Score(ActionDescriptor action)
         {
             var actualParameters = action.RouteValues;
-            var expectedParameters = action.Parameters?.Select(p => new {p.Name, p.ParameterType});
+            var expectedParameters = action.Parameters?.Select(p => new {p.Name, p.ParameterType}).ToArray();
             var convertibleMatches =
                 expectedParameters==null
                     ? 0 
@@ -132,5 +123,25 @@ namespace ComponentAsService2.UseComponentAsService
             var mismatches = actualParameters.Count + (expectedParameters?.Count()??0) - 2 * convertibleMatches;
             return -mismatches;
         }
+
+        static object TryConvert(Type toType, string fromString)
+        {
+            try
+            {
+                return TypeDescriptor.GetConverter(toType).ConvertFromString(fromString);
+            }
+            catch{ return null; }
+        }
+
+        static readonly Dictionary<Type,int> TypeSpecificity=new Dictionary<Type, int>
+        {
+            {typeof(string),0},
+            {typeof(float),2},
+            {typeof(long),2},
+            {typeof(double),3},
+            {typeof(decimal),4},
+        };
+        
+
     }
 }
