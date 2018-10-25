@@ -6,7 +6,7 @@ namespace ComponentAsService2.UseComponentAsService
 {
     public static class ComponentAsServiceExtensions
     {
-        /// <summary>Add the <see cref="AnythingCanBeControllersFeatureProvider"/> so that components can be served as controllers</summary>
+        /// <summary>Add the <see cref="AnythingCanBeAControllerFeatureProvider"/> so that components can be served as controllers</summary>
         /// <param name="services"></param>
         /// <param name="componentTypesToServe"></param>
         /// <returns><paramref name="services"/></returns>
@@ -19,7 +19,7 @@ namespace ComponentAsService2.UseComponentAsService
             return mvcBuilder;
         } 
 
-        /// <summary>Add the <see cref="AnythingCanBeControllersFeatureProvider"/> so that components can be served as controllers</summary>
+        /// <summary>Add the <see cref="AnythingCanBeAControllerFeatureProvider"/> so that components can be served as controllers</summary>
         /// <param name="mvcBuilder"></param>
         /// <param name="componentTypesToServe"></param>
         /// <returns><paramref name="mvcBuilder"/></returns>
@@ -72,7 +72,7 @@ namespace ComponentAsService2.UseComponentAsService
         public static IApplicationBuilder UseAsAController(this IApplicationBuilder app, params TypeInfo[] moreControllers)
         {
             app.ApplicationServices
-               .GetService<AnythingCanBeControllersFeatureProvider>()
+               .GetService<AnythingCanBeAControllerFeatureProvider>()
                .Add(moreControllers);
             return app;
         }

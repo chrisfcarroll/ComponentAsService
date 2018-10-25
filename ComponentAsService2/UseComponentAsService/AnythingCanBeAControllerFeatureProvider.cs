@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 
 namespace ComponentAsService2.UseComponentAsService
 {
-    public class AnythingCanBeControllersFeatureProvider : ControllerFeatureProvider, ICollection<TypeInfo>
+    public class AnythingCanBeAControllerFeatureProvider : ControllerFeatureProvider, ICollection<TypeInfo>
     {
         /// <summary>Determines if a given <paramref name="typeInfo" /> is a controller.</summary>
         /// <param name="typeInfo">The <see cref="T:System.Reflection.TypeInfo" /> candidate.</param>
@@ -18,7 +18,7 @@ namespace ComponentAsService2.UseComponentAsService
             return typeInfo.IsIn(moreControllerTypes) || base.IsController(typeInfo);
         }
 
-        public AnythingCanBeControllersFeatureProvider(params TypeInfo[] moreControllerTypes) 
+        public AnythingCanBeAControllerFeatureProvider(params TypeInfo[] moreControllerTypes) 
             => this.moreControllerTypes = moreControllerTypes;
 
         TypeInfo[] moreControllerTypes;
