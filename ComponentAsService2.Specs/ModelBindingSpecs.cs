@@ -43,17 +43,6 @@ namespace ComponentAsService2.Specs
             stringResult.ShouldBe(new ComponentAsServiceDiagnostics().BindComplexObject(9,expected) );
         }
         
-//        [Theory]
-//        [InlineData("/Calculator/Add?a=1.1&b=2", 3.1)]
-//        [InlineData("/Calculator/Add?a=1&b=2&c=3.3", 6.3)]
-//        public async Task CanResolveOverloads(string url, float expected)
-//        {
-//            var stringResult = await (await client.GetAsync(url)).Content.ReadAsStringAsync();
-//
-//            Console.WriteLine(stringResult);
-//            stringResult.ShouldBe(expected.ToString());
-//        }
-        
         public ModelBindingSpecs(ITestOutputHelper console)
         {
             this.console = console;

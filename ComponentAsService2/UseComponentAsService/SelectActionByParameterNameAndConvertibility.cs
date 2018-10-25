@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc.Abstractions;
+using Microsoft.Extensions.Logging;
 
 namespace ComponentAsService2.UseComponentAsService
 {
@@ -16,12 +17,17 @@ namespace ComponentAsService2.UseComponentAsService
         /// (2) A preference for "bigger" or more complex types, so that float is preferred int,
         /// user defined types are preferred to primitive types, and types with more properties
         /// are preferred to types with fewer properties</summary>
-        public static FinerGrainedActionSelector.SelectBestOneActionDelegate Apply
-            = (logger, actions) => actions.OrderByDescending(Score).First();
+        public static ActionDescriptor Apply(ILogger logger, IReadOnlyList<ActionDescriptor> actions)
+        {
+            logger.LogDebug(actions.ToJson());
+            return actions.OrderByDescending(Score).First();
+        }
 
         public static int Score(ActionDescriptor action)
         {
-            var actualValues = action.RouteValues;
+            //TODO: how to get hold of action values.
+            var actualValues = new Dictionary<string, string>();
+
             var expectedParameters = action.Parameters?.Select(p => new {p.Name, p.ParameterType}).ToArray();
             
             var convertibleMatches =

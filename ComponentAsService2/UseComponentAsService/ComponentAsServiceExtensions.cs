@@ -1,11 +1,6 @@
-﻿using System.Linq;
-using System.Reflection;
+﻿using System.Reflection;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Mvc.Controllers;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc.Localization.Internal;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace ComponentAsService2.UseComponentAsService
 {
@@ -15,11 +10,10 @@ namespace ComponentAsService2.UseComponentAsService
         /// <param name="services"></param>
         /// <param name="componentTypesToServe"></param>
         /// <returns><paramref name="services"/></returns>
-        public static IMvcBuilder
-            AddComponentAsService(this IServiceCollection services, params TypeInfo[] componentTypesToServe)
+        public static IMvcBuilder AddComponentAsService(this IServiceCollection services, params TypeInfo[] componentTypesToServe)
         {
             var mvcBuilder = services.AddMvc();
-            AddAnythingCanBeAController(mvcBuilder, componentTypesToServe);
+            mvcBuilder.AddAnythingCanBeAController(componentTypesToServe);
             mvcBuilder.AddComponentAsService(typeof(ComponentAsServiceDiagnostics).GetTypeInfo());
             services.AddFinerGrainedActionSelector();
             return mvcBuilder;
@@ -29,11 +23,10 @@ namespace ComponentAsService2.UseComponentAsService
         /// <param name="mvcBuilder"></param>
         /// <param name="componentTypesToServe"></param>
         /// <returns><paramref name="mvcBuilder"/></returns>
-        public static IMvcBuilder 
-            AddComponentAsService(this IMvcBuilder mvcBuilder, params TypeInfo[] componentTypesToServe)
+        public static IMvcBuilder AddComponentAsService(this IMvcBuilder mvcBuilder, params TypeInfo[] componentTypesToServe)
         {
             mvcBuilder.Services.AddFinerGrainedActionSelector();            
-            return AddAnythingCanBeAController(mvcBuilder, componentTypesToServe);
+            return mvcBuilder.AddAnythingCanBeAController(componentTypesToServe);
         }
 
         /// <summary>Enable types <paramref name="componentTypesToServe"/> to be served as Controllers.</summary>
@@ -71,22 +64,7 @@ namespace ComponentAsService2.UseComponentAsService
             UseComponentAsService<TComponent1,TComponent2, TComponent3>(this IApplicationBuilder app)
             => UseAsAController(app, typeof(TComponent1).GetTypeInfo(),typeof(TComponent2).GetTypeInfo(),typeof(TComponent3).GetTypeInfo());
 
-        /// <summary>Add the <see cref="AnythingCanBeControllersFeatureProvider"/> so that components can be served as controllers</summary>
-        /// <param name="mvcBuilder"></param>
-        /// <param name="controllerTypesToAdd"></param>
-        /// <returns><paramref name="mvcBuilder"/></returns>
-        public static IMvcBuilder AddAnythingCanBeAController(this IMvcBuilder mvcBuilder, params TypeInfo[] controllerTypesToAdd)
-        {
-            var acbControllersFeatureProvider = new AnythingCanBeControllersFeatureProvider(controllerTypesToAdd);
-            var featureProviders = mvcBuilder.PartManager.FeatureProviders;
-            var controllerFeatureProvider = featureProviders.OfType<ControllerFeatureProvider>().FirstOrDefault();            
-            featureProviders.Remove(controllerFeatureProvider);
-            featureProviders.Add(acbControllersFeatureProvider);
-
-            mvcBuilder.Services.Add(ServiceDescriptor.Singleton<AnythingCanBeControllersFeatureProvider>(acbControllersFeatureProvider));            
-            return mvcBuilder;
-        }
-        
+       
         /// <summary>Enable types <paramref name="moreControllers"/> to be served as Controllers.</summary>
         /// <param name="app"></param>
         /// <param name="moreControllers"></param>
@@ -98,26 +76,5 @@ namespace ComponentAsService2.UseComponentAsService
                .Add(moreControllers);
             return app;
         }
-    }
-
-    public static class FinerGrainedActionSelectorExtensions
-    {
-        /// <summary>Add the <see cref="FinerGrainedActionSelector"/> so that components can be served as controllers</summary>
-        /// <param name="mvcBuilder"></param>
-        /// <param name="controllerTypesToAdd"></param>
-        /// <returns><paramref name="mvcBuilder"/></returns>
-        public static IMvcBuilder AddFinerGrainedActionSelector(this IMvcBuilder mvcBuilder, params TypeInfo[] controllerTypesToAdd)
-        {
-            mvcBuilder.Services.Replace(new ServiceDescriptor(typeof(IActionSelector), typeof(FinerGrainedActionSelector),ServiceLifetime.Singleton));
-            return mvcBuilder;
-        }        
-        /// <summary>Add the <see cref="FinerGrainedActionSelector"/> so that components can be served as controllers</summary>
-        /// <param name="mvcBuilder"></param>
-        /// <param name="controllerTypesToAdd"></param>
-        /// <returns><paramref name="mvcBuilder"/></returns>
-        public static IServiceCollection AddFinerGrainedActionSelector(this IServiceCollection services, params TypeInfo[] controllerTypesToAdd)
-        {
-            return services.Replace(new ServiceDescriptor(typeof(IActionSelector), typeof(FinerGrainedActionSelector),ServiceLifetime.Singleton));
-        }        
     }
 }
