@@ -20,7 +20,6 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
@@ -31,7 +30,7 @@ using ActionSelector=ComponentAsService2.UseComponentAsService.FinerGrainedActio
 //
 //
 
-namespace ComponentAsService2.Specs.Tests.Microsoft.AspNetCore.Mvc.Infrastructure
+namespace ComponentAsService2.Specs.FinerGrainedActionSelection.Tests.Microsoft.AspNetCore.Mvc.Infrastructure
 {
     public class ActionSelectorTest
     {

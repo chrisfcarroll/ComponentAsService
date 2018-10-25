@@ -1,11 +1,9 @@
 using System.Linq;
-using Extensions.Logging.ListOfString;
 using Microsoft.AspNetCore.Mvc.Abstractions;
-using Microsoft.Extensions.Logging;
 using TestBase;
 using Xunit;
 
-namespace ComponentAsService2.Specs
+namespace ComponentAsService2.Specs.FinerGrainedActionSelection
 {
     public class FinerGrainedActionSelectorSpecs : BaseForCreatingActionDescriptors
     {

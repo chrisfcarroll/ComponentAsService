@@ -7,7 +7,7 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 
-namespace ComponentAsService2.Specs.Tests.Microsoft.AspNetCore.Mvc.Infrastructure
+namespace ComponentAsService2.Specs.FinerGrainedActionSelection.Tests.Microsoft.AspNetCore.Mvc.Infrastructure
 {
     public class TestApplicationPart : ApplicationPart, IApplicationPartTypeProvider
     {

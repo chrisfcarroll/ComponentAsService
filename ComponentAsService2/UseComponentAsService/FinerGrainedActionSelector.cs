@@ -1,22 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+﻿using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Internal;
-using Microsoft.DotNet.PlatformAbstractions;
 using Microsoft.Extensions.Logging;
 
 namespace ComponentAsService2.UseComponentAsService
 {
     public class FinerGrainedActionSelector : ActionSelector
     {
-        public delegate ActionDescriptor SelectBestOneOfActionsDelegate(ILogger logger, IReadOnlyList<ActionDescriptor> actions);
+        public delegate ActionDescriptor SelectBestOneActionDelegate(ILogger logger, IReadOnlyList<ActionDescriptor> actions);
 
         readonly ILogger<FinerGrainedActionSelector> logger;
-
-        SelectBestOneOfActionsDelegate _selectActionStrategy = (logger, actions) => actions.First();
 
         /// <summary>
         /// Creates a new <see cref="FinerGrainedActionSelector"/>, which
@@ -40,13 +34,12 @@ namespace ComponentAsService2.UseComponentAsService
         /// more than one action to choose from. 
         /// The default implementation simply picks the first one.
         /// </summary>
-        public SelectBestOneOfActionsDelegate SelectActionStrategy
+        public SelectBestOneActionDelegate SelectActionStrategy
         {
-            get { return _selectActionStrategy;}
-            set { 
-                _selectActionStrategy = value ?? ((l, a) => a.First());
-            }
+            get => _selectActionStrategy;
+            set => _selectActionStrategy = value ?? SelectActionByParameterNameAndConvertibility.Apply;
         }
+        SelectBestOneActionDelegate _selectActionStrategy = SelectActionByParameterNameAndConvertibility.Apply;
 
 
         /// <inheritdoc />
@@ -55,109 +48,5 @@ namespace ComponentAsService2.UseComponentAsService
         /// <returns>A list of the best matching actions.</returns>
         protected override IReadOnlyList<ActionDescriptor> SelectBestActions(IReadOnlyList<ActionDescriptor> actions)
             => actions?.Count>1 ? new []{ _selectActionStrategy(logger, actions)} : actions;
-
-        class StringArrayComparer : IEqualityComparer<string[]>
-        {
-            public static readonly StringArrayComparer Ordinal = new StringArrayComparer(StringComparer.Ordinal);
-
-            public static readonly StringArrayComparer OrdinalIgnoreCase =
-                new StringArrayComparer(StringComparer.OrdinalIgnoreCase);
-
-            readonly StringComparer _valueComparer;
-
-            StringArrayComparer(StringComparer valueComparer)
-            {
-                _valueComparer = valueComparer;
-            }
-
-            public bool Equals(string[] x, string[] y)
-            {
-                if (x == y)
-                    return true;
-                if (x == null ^ y == null || x.Length != y.Length)
-                    return false;
-                for (int index = 0; index < x.Length; ++index)
-                {
-                    if ((!string.IsNullOrEmpty(x[index]) || !string.IsNullOrEmpty(y[index])) && !_valueComparer.Equals(x[index], y[index]))
-                        return false;
-                }
-
-                return true;
-            }
-
-            public int GetHashCode(string[] obj)
-            {
-                if (obj == null)
-                    return 0;
-                var hashCodeCombiner = new HashCodeCombiner();
-                for (int index = 0; index < obj.Length; ++index)
-                    hashCodeCombiner.Add(obj[index], _valueComparer);
-                return hashCodeCombiner.CombinedHash;
-            }
-        }
-    }
-
-    public static class SelectActionByParameterNameAndConvertibility
-    {
-        public static FinerGrainedActionSelector.SelectBestOneOfActionsDelegate Apply
-            = (logger, actions) => actions.OrderByDescending(Score).First();
-
-        public static int Score(ActionDescriptor action)
-        {
-            var actualValues = action.RouteValues;
-            var expectedParameters = action.Parameters?.Select(p => new {p.Name, p.ParameterType}).ToArray();
-            
-            var convertibleMatches =
-                (expectedParameters == null
-                    ? new []{ new {Key="",ParameterType=typeof(string),Value=null as object} }
-                    : actualValues
-                     .Join(expectedParameters,
-                           kv => kv.Key,
-                           nt => nt.Name,
-                           (a, e) => new
-                           {
-                               a.Key,
-                               e.ParameterType,
-                               Value = TryConvert(e.ParameterType, a.Value),
-                           })
-                    ).Where(x => x.Value != null).ToArray();
-
-            var score = convertibleMatches.Count() - actualValues.Count
-                         + convertibleMatches.Sum(m=>TypePreferenceScore(m.ParameterType)) 
-                         - (expectedParameters?.Length??0);
-            
-            return score;
-        }
-
-        static int TypePreferenceScore(Type type)
-        {
-            if (type == typeof(string))
-                return 0;
-            else if (type.IsPrimitive )
-                return PrimitiveTypePreferences.ContainsKey(type) ? PrimitiveTypePreferences[type] : 1;
-            else
-            {
-                return 5 + type.GetProperties().Length;
-            }
-        }
-
-        static object TryConvert(Type toType, string fromString)
-        {
-            try
-            {
-                return TypeDescriptor.GetConverter(toType).ConvertFromString(fromString);
-            }
-            catch{ return null; }
-        }
-
-        static readonly Dictionary<Type,int> PrimitiveTypePreferences=new Dictionary<Type, int>
-        {
-            {typeof(float),2},
-            {typeof(long),2},
-            {typeof(double),3},
-            {typeof(decimal),4},
-        };
-        
-
     }
 }

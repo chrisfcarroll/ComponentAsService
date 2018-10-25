@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using ComponentAsService2.Specs.Tests.Microsoft.AspNetCore.Mvc.Infrastructure;
+using ComponentAsService2.Specs.FinerGrainedActionSelection.Tests.Microsoft.AspNetCore.Mvc.Infrastructure;
 using ComponentAsService2.UseComponentAsService;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +21,7 @@ using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
 
-namespace ComponentAsService2.Specs
+namespace ComponentAsService2.Specs.FinerGrainedActionSelection
 {
     public class BaseForCreatingActionDescriptors
     {

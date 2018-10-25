@@ -7,9 +7,9 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using ComponentAsService2.Specs.Tests.Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.Extensions.Logging;
 
-namespace Microsoft.Extensions.Logging.Testing
+namespace ComponentAsService2.Specs.FinerGrainedActionSelection.Tests.Microsoft.AspNetCore.Mvc.Infrastructure
 {
   public class TestLoggerFactory : ILoggerFactory, IDisposable
   {

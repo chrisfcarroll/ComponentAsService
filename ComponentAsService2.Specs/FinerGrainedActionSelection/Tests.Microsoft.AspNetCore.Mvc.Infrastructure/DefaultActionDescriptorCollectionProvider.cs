@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Internal;
 using Microsoft.Extensions.Primitives;
 
-namespace ComponentAsService2.Specs.Tests.Microsoft.AspNetCore.Mvc.Infrastructure
+namespace ComponentAsService2.Specs.FinerGrainedActionSelection.Tests.Microsoft.AspNetCore.Mvc.Infrastructure
 {
     public class DefaultActionDescriptorCollectionProvider : ActionDescriptorCollectionProvider
     {
