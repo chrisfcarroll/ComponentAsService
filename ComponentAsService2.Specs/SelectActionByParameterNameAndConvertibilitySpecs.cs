@@ -12,12 +12,12 @@ namespace ComponentAsService2.Specs
     public class SelectActionByParameterNameAndConvertibilitySpecs : BaseForCreatingActionDescriptors
     {
         [Theory]
-        [InlineData(typeof(bool)  ,typeof(bool) ,  5 - 2*0 )]
-        [InlineData(typeof(float) ,typeof(float) , 5 - 2*2 )]
-        [InlineData(typeof(string),typeof(string) , 5 - 2*2 )]
-        [InlineData(typeof(int)   ,typeof(int) ,   5 - 2*1 )]
+        [InlineData(typeof(bool)  ,typeof(bool) ,  0 - 3 + 0 - 2 )]
+        [InlineData(typeof(string),typeof(string), 2 - 3 + 0 - 2 )]
+        [InlineData(typeof(int)   ,typeof(int) ,   1 - 3 + 1 - 2)]
+        [InlineData(typeof(float) ,typeof(float) , 2 - 3 + 4 - 2 )]
         public void 
-            ScoreGivenRouteValuesA1point0B1_IsRvCountPlusAPCountMinusTwoTimesMismatches(Type typeA, Type typeB, int expectedMismatches)
+            ScoreGivenRouteValuesA1point0B1_IsRvCountPlusAPCountMinusTwoTimesMismatches(Type typeA, Type typeB, int expectedScore)
         {
             var routeValues = new Dictionary<string,string>{{"a", "1.0"}, {"b", "1"}, {"c", "c"}};
             var action = new ActionDescriptor
@@ -32,14 +32,14 @@ namespace ComponentAsService2.Specs
 
             SelectActionByParameterNameAndConvertibility
                 .Score(action)
-                .ShouldBe( - expectedMismatches );
+                .ShouldBe( expectedScore );
         }
         [Theory]
-        [InlineData("a", typeof(bool) ,  4 - 2*0 )]
-        [InlineData("a", typeof(float) , 4 - 2*1 )]
-        [InlineData("a", typeof(string), 4 - 2*1 )]
-        [InlineData("a", typeof(int) ,   4 - 2*1 )]
-        public void ScoreGivenRouteValuesA1BBCC_IsRvCountPlusAPCountMinusTwoTimesMismatches(string name, Type type, int expectedMismatches)
+        [InlineData("a", typeof(bool) ,  0 - 3 + 0 - 1 )]
+        [InlineData("a", typeof(float) , 1 - 3 + 2 - 1 )]
+        [InlineData("a", typeof(string), 1 - 3 + 0 - 1 )]
+        [InlineData("a", typeof(int) ,   1 - 3 + 1 - 1 )]
+        public void ScoreGivenRouteValuesA1BBCC_IsRvCountPlusAPCountMinusTwoTimesMismatches(string name, Type type, int expectedScore)
         {
             var routeValues = new Dictionary<string,string>{{"a", "1"}, {"b", "b"}, {"c", "c"}};
             var action = new ActionDescriptor
@@ -50,7 +50,7 @@ namespace ComponentAsService2.Specs
 
             SelectActionByParameterNameAndConvertibility
                 .Score(action)
-                .ShouldBe( - expectedMismatches );
+                .ShouldBe( expectedScore );
         }
 
         [Fact]

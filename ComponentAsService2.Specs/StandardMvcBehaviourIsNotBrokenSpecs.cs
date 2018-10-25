@@ -7,7 +7,7 @@ using Xunit;
 
 namespace ComponentAsService2.Specs
 {
-    public class StandardBehaviourIsNotBrokenSpecs
+    public class StandardMvcBehaviourIsNotBrokenSpecs
     {
         [Theory]
         [InlineData("/", "Home Page")]
@@ -22,7 +22,7 @@ namespace ComponentAsService2.Specs
             stringResult.ShouldContain(expectedSnippet);
         }
         
-        public StandardBehaviourIsNotBrokenSpecs()
+        public StandardMvcBehaviourIsNotBrokenSpecs()
             => client
                    = new TestServer(Program.CreateWebHostBuilder(new string[0]))
                      .CreateClient()

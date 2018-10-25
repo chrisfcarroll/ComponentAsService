@@ -97,31 +97,48 @@ namespace ComponentAsService2.UseComponentAsService
         }
     }
 
-    public class SelectActionByParameterNameAndConvertibility
+    public static class SelectActionByParameterNameAndConvertibility
     {
         public static FinerGrainedActionSelector.SelectBestOneOfActionsDelegate Apply
             = (logger, actions) => actions.OrderByDescending(Score).First();
 
         public static int Score(ActionDescriptor action)
         {
-            var actualParameters = action.RouteValues;
+            var actualValues = action.RouteValues;
             var expectedParameters = action.Parameters?.Select(p => new {p.Name, p.ParameterType}).ToArray();
+            
             var convertibleMatches =
-                expectedParameters==null
-                    ? 0 
-                    :actualParameters
-                        .Join(expectedParameters,
-                            kv => kv.Key, nt => nt.Name,
-                            (a, e) => new
-                            {
-                                a.Key,
-                                e.ParameterType,
-                                Value = TryConvert(e.ParameterType,a.Value),
-                            })
-                        .Count(x=>x.Value!=null);
+                (expectedParameters == null
+                    ? new []{ new {Key="",ParameterType=typeof(string),Value=null as object} }
+                    : actualValues
+                     .Join(expectedParameters,
+                           kv => kv.Key,
+                           nt => nt.Name,
+                           (a, e) => new
+                           {
+                               a.Key,
+                               e.ParameterType,
+                               Value = TryConvert(e.ParameterType, a.Value),
+                           })
+                    ).Where(x => x.Value != null).ToArray();
 
-            var mismatches = actualParameters.Count + (expectedParameters?.Count()??0) - 2 * convertibleMatches;
-            return -mismatches;
+            var score = convertibleMatches.Count() - actualValues.Count
+                         + convertibleMatches.Sum(m=>TypePreferenceScore(m.ParameterType)) 
+                         - (expectedParameters?.Length??0);
+            
+            return score;
+        }
+
+        static int TypePreferenceScore(Type type)
+        {
+            if (type == typeof(string))
+                return 0;
+            else if (type.IsPrimitive )
+                return PrimitiveTypePreferences.ContainsKey(type) ? PrimitiveTypePreferences[type] : 1;
+            else
+            {
+                return 5 + type.GetProperties().Length;
+            }
         }
 
         static object TryConvert(Type toType, string fromString)
@@ -133,9 +150,8 @@ namespace ComponentAsService2.UseComponentAsService
             catch{ return null; }
         }
 
-        static readonly Dictionary<Type,int> TypeSpecificity=new Dictionary<Type, int>
+        static readonly Dictionary<Type,int> PrimitiveTypePreferences=new Dictionary<Type, int>
         {
-            {typeof(string),0},
             {typeof(float),2},
             {typeof(long),2},
             {typeof(double),3},
