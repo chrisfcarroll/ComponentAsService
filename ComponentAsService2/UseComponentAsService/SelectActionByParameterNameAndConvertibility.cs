@@ -3,30 +3,14 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc.Abstractions;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Routing;
 
 namespace ComponentAsService2.UseComponentAsService
 {
-    /// <summary>Provides <see cref="Apply"/> as a Delegate suitable for use by
-    /// <see cref="FinerGrainedActionSelector.SelectActionStrategy"/>
-    /// </summary>
-    public static class SelectActionByParameterNameAndConvertibility
+    public static class ScoreByParameterNameAndConvertibility
     {
-        /// <summary>Selects a best match Action by scoring each candidate action on 
-        /// (1) How many RouteValues match the Actions' parameters by name and Type-convertibility
-        /// (2) A preference for "bigger" or more complex types, so that float is preferred int,
-        /// user defined types are preferred to primitive types, and types with more properties
-        /// are preferred to types with fewer properties</summary>
-        public static ActionDescriptor Apply(ILogger logger, IReadOnlyList<ActionDescriptor> actions)
+        public static int Score(IDictionary<string, object> actualValues, RouteContext rContext, ActionDescriptor action)
         {
-            logger.LogDebug(actions.ToJson());
-            return actions.OrderByDescending(Score).First();
-        }
-
-        public static int Score(ActionDescriptor action)
-        {
-            //TODO: how to get hold of action values.
-            var actualValues = new Dictionary<string, string>();
 
             var expectedParameters = action.Parameters?.Select(p => new {p.Name, p.ParameterType}).ToArray();
             
@@ -64,11 +48,11 @@ namespace ComponentAsService2.UseComponentAsService
             }
         }
 
-        static object TryConvert(Type toType, string fromString)
+        static object TryConvert(Type toType, object routeValue)
         {
             try
             {
-                return TypeDescriptor.GetConverter(toType).ConvertFromString(fromString);
+                return TypeDescriptor.GetConverter(toType).ConvertFrom(routeValue);
             }
             catch{ return null; }
         }
@@ -80,7 +64,6 @@ namespace ComponentAsService2.UseComponentAsService
             {typeof(double),3},
             {typeof(decimal),4},
         };
-        
 
     }
 }

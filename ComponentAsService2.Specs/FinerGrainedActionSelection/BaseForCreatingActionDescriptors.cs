@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using ComponentAsService2.Specs.FinerGrainedActionSelection.Tests.Microsoft.AspNetCore.Mvc.Infrastructure;
 using ComponentAsService2.UseComponentAsService;
+using Microsoft.AspNetCore.Hosting.Internal;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.ActionConstraints;
@@ -19,30 +22,56 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
-using Xunit;
+using TestBase;
+using Assert = Xunit.Assert;
 
 namespace ComponentAsService2.Specs.FinerGrainedActionSelection
 {
     public class BaseForCreatingActionDescriptors
     {
-        public static FinerGrainedActionSelector CreateSelector(IReadOnlyList<ActionDescriptor> actions, ILoggerFactory loggerFactory = null)
+        public static FinerGrainedActionSelector CreateFinerGrainedActionSelector(IReadOnlyList<ActionDescriptor> actions, ILoggerFactory loggerFactory = null)
         {
             loggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
 
-            var actionProvider = new Mock<IActionDescriptorCollectionProvider>(MockBehavior.Strict);
-
-            actionProvider
-                .Setup(p => p.ActionDescriptors)
-                .Returns(new ActionDescriptorCollection(actions, 0));
+            var actionProvider = CreateMockIActionDescriptorCollectionProvider(actions);
 
             var actionConstraintProviders = new IActionConstraintProvider[] {
-                new DefaultActionConstraintProvider(),
-                new BooleanConstraintProvider()
-            };
+                    new DefaultActionConstraintProvider(),
+                    new BooleanConstraintProvider(),
+                };
 
             return new FinerGrainedActionSelector(
                 actionProvider.Object,
                 GetActionConstraintCache(actionConstraintProviders),
+                ModelingBindingParameterBinderTestBase.CreateParameterBinder(),
+                new ModelBinderFactory(
+                    TestModelMetadataProvider.CreateDefaultProvider(),
+                    ModelingBindingParameterBinderTestBase.MvcOptionsWrapper,
+                    GetServiceProvider(loggerFactory)
+                ),
+                TestModelMetadataProvider.CreateDefaultProvider(),
+                ModelingBindingParameterBinderTestBase.MvcOptionsWrapper,
+                loggerFactory);
+        }
+
+        public static FinerGrainedActionSelector CreateFinerGrainedActionSelector(
+            IActionDescriptorCollectionProvider actionDescriptorCollectionProvider, 
+            IActionConstraintProvider[] actionConstraintProviders, 
+            ILoggerFactory loggerFactory=null)
+        {
+            loggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
+
+            return new FinerGrainedActionSelector(
+                actionDescriptorCollectionProvider,
+                GetActionConstraintCache(actionConstraintProviders),
+                ModelingBindingParameterBinderTestBase.CreateParameterBinder(),
+                new ModelBinderFactory(
+                    TestModelMetadataProvider.CreateDefaultProvider(),
+                    ModelingBindingParameterBinderTestBase.MvcOptionsWrapper,
+                    GetServiceProvider(loggerFactory)
+                ),
+                TestModelMetadataProvider.CreateDefaultProvider(),
+                ModelingBindingParameterBinderTestBase.MvcOptionsWrapper,
                 loggerFactory);
         }
 
@@ -58,14 +87,28 @@ namespace ComponentAsService2.Specs.FinerGrainedActionSelection
                 new DefaultActionConstraintProvider()
             };
 
-            var actionSelector = new FinerGrainedActionSelector(
-                actionDescriptorCollectionProvider,
-                GetActionConstraintCache(actionConstraintProviders),
-                NullLoggerFactory.Instance);
+            var actionSelector = CreateFinerGrainedActionSelector(actionDescriptorCollectionProvider, actionConstraintProviders);
 
             var candidates = actionSelector.SelectCandidates(context);
             return (ControllerActionDescriptor)actionSelector.SelectBestCandidate(context, candidates);
         }
+
+        static IServiceProvider GetServiceProvider(ILoggerFactory loggerFactory=null, params object[] instances)
+        {
+            var services = new ServiceCollection();
+            services.AddSingleton(loggerFactory??NullLoggerFactory.Instance);
+            return services.BuildServiceProvider();
+        }
+
+        static Mock<IActionDescriptorCollectionProvider> CreateMockIActionDescriptorCollectionProvider(IReadOnlyList<ActionDescriptor> actions)
+        {
+            var actionProvider = new Mock<IActionDescriptorCollectionProvider>(MockBehavior.Strict);
+            actionProvider
+                .Setup(p => p.ActionDescriptors)
+                .Returns(new ActionDescriptorCollection(actions, 0));
+            return actionProvider;
+        }
+
 
         public ControllerActionDescriptorProvider GetActionDescriptorProvider()
         {
@@ -154,21 +197,53 @@ namespace ComponentAsService2.Specs.FinerGrainedActionSelection
             var routeData = new RouteData();
             routeData.Routers.Add(new Mock<IRouter>(MockBehavior.Strict).Object);
 
-            var serviceProvider = new ServiceCollection().BuildServiceProvider();
+            var httpContext = CreateHttpContext(httpMethod, routeData);
 
-            var httpContext = new Mock<HttpContext>(MockBehavior.Strict);
-
-            var request = new Mock<HttpRequest>(MockBehavior.Strict);
-            request.SetupGet(r => r.Method).Returns(httpMethod);
-            request.SetupGet(r => r.Path).Returns(new PathString());
-            request.SetupGet(r => r.Headers).Returns(new HeaderDictionary());
-            httpContext.SetupGet(c => c.Request).Returns(request.Object);
-            httpContext.SetupGet(c => c.RequestServices).Returns(serviceProvider);
-
-            return new RouteContext(httpContext.Object)
+            return new RouteContext(httpContext)
             {
                 RouteData = routeData
             };
+        }
+
+        static DefaultHttpContext CreateHttpContext(string httpMethod, RouteData routeData)
+        {
+            var features = new FeatureCollection();
+            features.Set((IRoutingFeature) new RoutingFeature {RouteData = routeData});
+            var httpRequestFeature = (IHttpRequestFeature) new HttpRequestFeature
+            {
+                Method = httpMethod,
+                Path = new PathString("/here"),
+                Headers = new HeaderDictionary(),
+                Protocol = "https",
+                Body = new MemoryStream(new byte[0]),
+                PathBase = "/",
+                QueryString = "",
+                RawTarget = "",
+                Scheme = "https"
+            };
+            features.Set(httpRequestFeature);
+            features.Set((IHttpResponseFeature) new HttpResponseFeature
+            {
+                Body = new MemoryStream(),
+                Headers = new HeaderDictionary(),
+                StatusCode = 200
+            });
+
+            var httpContext = new DefaultHttpContext(features);
+
+            var serviceProvider = new ServiceCollection().BuildServiceProvider();
+            var engineAsScopeFactory = typeof(ServiceProvider)
+                .GetField("_engine", BindingFlags.Instance|BindingFlags.NonPublic)
+                .GetValue(serviceProvider) as IServiceScopeFactory;
+            features.Set(
+                (IServiceProvidersFeature)new RequestServicesFeature(httpContext,engineAsScopeFactory));
+
+            httpContext.Request
+                .ShouldEqualByValueOnMembers(
+                    features[typeof(IHttpRequestFeature)], 
+                    new []{"Method","Protocol","Scheme"} );
+
+            return httpContext;
         }
 
         public static ActionDescriptor CreateAction(string area, string controller, string action)

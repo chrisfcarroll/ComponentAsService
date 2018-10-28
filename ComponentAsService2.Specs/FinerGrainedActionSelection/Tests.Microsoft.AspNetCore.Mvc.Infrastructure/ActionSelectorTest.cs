@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Internal;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
@@ -932,10 +933,7 @@ namespace ComponentAsService2.Specs.FinerGrainedActionSelection.Tests.Microsoft.
                 new DefaultActionConstraintProvider(),
             };
 
-            var actionSelector = new ActionSelector(
-                actionDescriptorCollectionProvider,
-                GetActionConstraintCache(actionConstraintProviders),
-                NullLoggerFactory.Instance);
+            var actionSelector = CreateSelector(actionDescriptorCollectionProvider, actionConstraintProviders);
 
             var candidates = actionSelector.SelectCandidates(context);
             return (ControllerActionDescriptor)actionSelector.SelectBestCandidate(context, candidates);
@@ -1014,11 +1012,7 @@ namespace ComponentAsService2.Specs.FinerGrainedActionSelection.Tests.Microsoft.
         {
             loggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
 
-            var actionProvider = new Mock<IActionDescriptorCollectionProvider>(MockBehavior.Strict);
-
-            actionProvider
-                .Setup(p => p.ActionDescriptors)
-                .Returns(new ActionDescriptorCollection(actions, 0));
+            var actionProvider = CreateMockIActionDescriptorCollectionProvider(actions);
 
             var actionConstraintProviders = new IActionConstraintProvider[] {
                     new DefaultActionConstraintProvider(),
@@ -1028,7 +1022,51 @@ namespace ComponentAsService2.Specs.FinerGrainedActionSelection.Tests.Microsoft.
             return new ActionSelector(
                 actionProvider.Object,
                 GetActionConstraintCache(actionConstraintProviders),
+                ModelingBindingParameterBinderTestBase.CreateParameterBinder(),
+                new ModelBinderFactory(
+                    TestModelMetadataProvider.CreateDefaultProvider(),
+                    ModelingBindingParameterBinderTestBase.MvcOptionsWrapper,
+                    GetServiceProvider(loggerFactory)
+                ),
+                TestModelMetadataProvider.CreateDefaultProvider(),
+                ModelingBindingParameterBinderTestBase.MvcOptionsWrapper,
                 loggerFactory);
+        }
+
+        static ActionSelector CreateSelector(
+            IActionDescriptorCollectionProvider actionDescriptorCollectionProvider, 
+            DefaultActionConstraintProvider[] actionConstraintProviders, 
+            ILoggerFactory loggerFactory=null)
+        {
+            loggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
+            return new ActionSelector(
+                actionDescriptorCollectionProvider,
+                GetActionConstraintCache(actionConstraintProviders),
+                ModelingBindingParameterBinderTestBase.CreateParameterBinder(),
+                new ModelBinderFactory(
+                    TestModelMetadataProvider.CreateDefaultProvider(),
+                    ModelingBindingParameterBinderTestBase.MvcOptionsWrapper,
+                    GetServiceProvider(loggerFactory)
+                ),
+                TestModelMetadataProvider.CreateDefaultProvider(),
+                ModelingBindingParameterBinderTestBase.MvcOptionsWrapper,
+                loggerFactory);
+        }
+
+        static IServiceProvider GetServiceProvider(ILoggerFactory loggerFactory=null, params object[] instances)
+        {
+            var services = new ServiceCollection();
+            services.AddSingleton(loggerFactory??NullLoggerFactory.Instance);
+            return services.BuildServiceProvider();
+        }
+
+        static Mock<IActionDescriptorCollectionProvider> CreateMockIActionDescriptorCollectionProvider(IReadOnlyList<ActionDescriptor> actions)
+        {
+            var actionProvider = new Mock<IActionDescriptorCollectionProvider>(MockBehavior.Strict);
+            actionProvider
+                .Setup(p => p.ActionDescriptors)
+                .Returns(new ActionDescriptorCollection(actions, 0));
+            return actionProvider;
         }
 
         static VirtualPathContext CreateContext(object routeValues)
@@ -1118,7 +1156,7 @@ namespace ComponentAsService2.Specs.FinerGrainedActionSelection.Tests.Microsoft.
             public bool Pass { get; set; }
         }
 
-        class BooleanConstraintProvider : IActionConstraintProvider
+        public class BooleanConstraintProvider : IActionConstraintProvider
         {
             public int Order { get; set; }
 

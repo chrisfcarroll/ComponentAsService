@@ -29,7 +29,7 @@ namespace ComponentAsService2.UseComponentAsService
         {
             return services.Replace(
                 new ServiceDescriptor(typeof(IActionSelector), 
-                    ActionSelectorType,ServiceLifetime.Singleton));
+                    ActionSelectorType,ServiceLifetime.Transient /*Could try scoped, but either way it relies on an HttpContext*/  ));
         }        
     }
 }

@@ -21,7 +21,7 @@ namespace ComponentAsService2.Specs
             stringResult.ShouldBe(expected.ToString());
         }
 
-        [NotYetATheory("First need access to incoming route values for parameters")]
+        [Theory] //[NotYetATheory("First need access to incoming route values for parameters")]
         [InlineData("/Calculator/Add?a=1.1&b=2", 3.1)]
         [InlineData("/Calculator/Add?a=1&b=2&c=3.3", 6.3)]
         public async Task CanResolveOverloads(string url, float expected)
