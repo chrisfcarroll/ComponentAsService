@@ -208,4 +208,19 @@ private static BinderItem[] GetParameterBindingInfo(
 
 ```
 
+ActionContext= {
+	HttpContext <--From RC
+  RouteData <-- from RC
+  ActionDescriptor <-- given
+  ModelState= new 
+}
+
+
+ cc = new ControllerContext(ActionContext){
+ 	ValueProviderFactories 
+ 	= new CopyOnWriteList<IValueProviderFactory>( 
+ 					MvcOptions.ValueProviderFactories.ToArray());
+  ModelState.MaxAllowedErrors= MvcOptions.MaxModelValidationErrors
+
+}
 

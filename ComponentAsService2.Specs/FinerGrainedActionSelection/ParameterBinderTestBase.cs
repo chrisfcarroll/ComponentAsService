@@ -22,6 +22,7 @@ namespace ComponentAsService2.Specs.FinerGrainedActionSelection
         public static readonly IOptions<MvcOptions> MvcOptionsWrapper = Options.Create(new MvcOptions
         {
             AllowValidatingTopLevelNodes = true,
+            ModelBinderProviders = { }
         });
 
         public static ControllerContext GetControllerContext()

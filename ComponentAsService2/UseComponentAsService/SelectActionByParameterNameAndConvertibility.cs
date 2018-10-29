@@ -29,10 +29,11 @@ namespace ComponentAsService2.UseComponentAsService
                             })
                 ).Where(x => x.Value != null).ToArray();
 
-            var score = convertibleMatches.Count() - actualValues.Count
-                        + convertibleMatches.Sum(m=>TypePreferenceScore(m.ParameterType)) 
-                        - (expectedParameters?.Length??0);
-            
+            var score = 10*(convertibleMatches.Count() 
+                            - actualValues.Count
+                            - (expectedParameters?.Length??0)
+                            )
+                        + convertibleMatches.Sum(m=>TypePreferenceScore(m.ParameterType)) ;
             return score;
         }
 
@@ -52,18 +53,30 @@ namespace ComponentAsService2.UseComponentAsService
         {
             try
             {
-                return TypeDescriptor.GetConverter(toType).ConvertFrom(routeValue);
+                var convertor = TypeDescriptor.GetConverter(toType);
+                if (routeValue is string)
+                {
+                    return convertor.ConvertFromString(routeValue as string);
+                }
+                else if(convertor.CanConvertFrom(routeValue.GetType()))
+                {
+                    return convertor.ConvertFrom(routeValue);
+                }
+                else
+                {
+                    return convertor.ConvertFromString(routeValue.ToString());
+                }
             }
-            catch{ return null; }
+            catch (Exception e){return null;}
         }
 
         static readonly Dictionary<Type,int> PrimitiveTypePreferences=new Dictionary<Type, int>
         {
-            {typeof(float),2},
-            {typeof(long),2},
-            {typeof(double),3},
+            {typeof(double),2},
+            {typeof(float),3},
             {typeof(decimal),4},
+            {typeof(long),5},
+            {typeof(int), 6},
         };
-
     }
 }

@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Internal;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.TagHelpers;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -29,7 +30,9 @@ namespace ComponentAsService2.Specs.FinerGrainedActionSelection
 {
     public class BaseForCreatingActionDescriptors
     {
-        public static FinerGrainedActionSelector CreateFinerGrainedActionSelector(IReadOnlyList<ActionDescriptor> actions, ILoggerFactory loggerFactory = null)
+        public static FinerGrainedActionSelector CreateFinerGrainedActionSelector(
+                        IReadOnlyList<ActionDescriptor> actions, 
+                        ILoggerFactory loggerFactory = null)
         {
             loggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
 
@@ -44,20 +47,16 @@ namespace ComponentAsService2.Specs.FinerGrainedActionSelection
                 actionProvider.Object,
                 GetActionConstraintCache(actionConstraintProviders),
                 ModelingBindingParameterBinderTestBase.CreateParameterBinder(),
-                new ModelBinderFactory(
-                    TestModelMetadataProvider.CreateDefaultProvider(),
-                    ModelingBindingParameterBinderTestBase.MvcOptionsWrapper,
-                    GetServiceProvider(loggerFactory)
-                ),
+                TestModelBinderFactory.CreateDefault(),
                 TestModelMetadataProvider.CreateDefaultProvider(),
                 ModelingBindingParameterBinderTestBase.MvcOptionsWrapper,
                 loggerFactory);
         }
 
         public static FinerGrainedActionSelector CreateFinerGrainedActionSelector(
-            IActionDescriptorCollectionProvider actionDescriptorCollectionProvider, 
-            IActionConstraintProvider[] actionConstraintProviders, 
-            ILoggerFactory loggerFactory=null)
+                        IActionDescriptorCollectionProvider actionDescriptorCollectionProvider, 
+                        IActionConstraintProvider[] actionConstraintProviders, 
+                        ILoggerFactory loggerFactory=null)
         {
             loggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
 
@@ -65,11 +64,7 @@ namespace ComponentAsService2.Specs.FinerGrainedActionSelection
                 actionDescriptorCollectionProvider,
                 GetActionConstraintCache(actionConstraintProviders),
                 ModelingBindingParameterBinderTestBase.CreateParameterBinder(),
-                new ModelBinderFactory(
-                    TestModelMetadataProvider.CreateDefaultProvider(),
-                    ModelingBindingParameterBinderTestBase.MvcOptionsWrapper,
-                    GetServiceProvider(loggerFactory)
-                ),
+                TestModelBinderFactory.CreateDefault(),
                 TestModelMetadataProvider.CreateDefaultProvider(),
                 ModelingBindingParameterBinderTestBase.MvcOptionsWrapper,
                 loggerFactory);
@@ -192,10 +187,15 @@ namespace ComponentAsService2.Specs.FinerGrainedActionSelection
                 new RouteValueDictionary(routeValues));
         }
 
-        public static RouteContext CreateRouteContext(string httpMethod)
+        public static RouteContext CreateRouteContext(string httpMethod, RouteValueDictionary incomingValues=null)
         {
             var routeData = new RouteData();
             routeData.Routers.Add(new Mock<IRouter>(MockBehavior.Strict).Object);
+
+            if (incomingValues?.Any()==true)foreach(var kvp in incomingValues)
+            {
+                routeData.Values.Add(kvp.Key, kvp.Value);
+            }
 
             var httpContext = CreateHttpContext(httpMethod, routeData);
 

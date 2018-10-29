@@ -1,28 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Threading;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
-using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Mvc.ActionConstraints;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Internal;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.DotNet.PlatformAbstractions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace ComponentAsService2.UseComponentAsService
 {
-    public class FinerGrainedActionSelector : ActionSelector
+    public class FinerGrainedActionSelector : IActionSelector
     {
-        readonly ParameterBinder parameterBinder;
-        readonly IModelBinderFactory modelBinderFactory;
-        readonly IModelMetadataProvider modelMetadataProvider;
-        readonly MvcOptions mvcOptions;
-        RouteContext routeContext;
-
+        static readonly IReadOnlyList<ActionDescriptor> EmptyActions = Array.Empty<ActionDescriptor>();
+        readonly IActionDescriptorCollectionProvider actionDescriptorCollectionProvider;
+        readonly ActionConstraintCache actionConstraintCache;
         readonly ILogger<FinerGrainedActionSelector> logger;
+        readonly ActionDisambiguatorForOverloadedMethods actionDisambiguator;
+        Cache _cache;
 
         /// <summary>
         /// Creates a new <see cref="FinerGrainedActionSelector"/>, which
@@ -42,236 +43,464 @@ namespace ComponentAsService2.UseComponentAsService
         public FinerGrainedActionSelector(
             IActionDescriptorCollectionProvider actionDescriptorCollectionProvider,
             ActionConstraintCache actionConstraintCache,
-            ParameterBinder parameterBinder, 
-            IModelBinderFactory modelBinderFactory, 
-            IModelMetadataProvider modelMetadataProvider, 
+            ParameterBinder parameterBinder,
+            IModelBinderFactory modelBinderFactory,
+            IModelMetadataProvider modelMetadataProvider,
             IOptions<MvcOptions> mvcOptions,
-            ILoggerFactory loggerFactory) : base(actionDescriptorCollectionProvider, actionConstraintCache, loggerFactory)
+            ILoggerFactory loggerFactory)
         {
-            if (parameterBinder == null)throw new ArgumentNullException(nameof(parameterBinder));
-            if (modelBinderFactory == null)throw new ArgumentNullException(nameof(modelBinderFactory));
-            if (modelMetadataProvider == null)throw new ArgumentNullException(nameof(modelMetadataProvider));
-            if (mvcOptions == null)throw new ArgumentNullException(nameof(mvcOptions));
-            this.parameterBinder = parameterBinder;
-            this.modelBinderFactory = modelBinderFactory;
-            this.modelMetadataProvider = modelMetadataProvider;
-            this.mvcOptions = mvcOptions.Value;
+            if (parameterBinder == null) throw new ArgumentNullException(nameof(parameterBinder));
+            if (modelBinderFactory == null) throw new ArgumentNullException(nameof(modelBinderFactory));
+            if (modelMetadataProvider == null) throw new ArgumentNullException(nameof(modelMetadataProvider));
+            if (mvcOptions == null) throw new ArgumentNullException(nameof(mvcOptions));
+            this.actionDescriptorCollectionProvider = actionDescriptorCollectionProvider;
+            this.actionConstraintCache = actionConstraintCache;
             logger = loggerFactory.CreateLogger<FinerGrainedActionSelector>();
+            actionDisambiguator =
+                new ActionDisambiguatorForOverloadedMethods(modelBinderFactory, modelMetadataProvider, mvcOptions.Value, parameterBinder);
         }
 
-        public new ActionDescriptor SelectBestCandidate(RouteContext context, IReadOnlyList<ActionDescriptor> candidates)
-        {
-            if (context == null) throw new ArgumentNullException(nameof(context));
-            if (candidates == null) throw new ArgumentNullException(nameof(candidates));
-            routeContext = context;
-
-            var controllerActionDescriptors = candidates?.OfType<ControllerActionDescriptor>();
-
-            if ( controllerActionDescriptors.Count() <2)
-                return candidates.Single();
-
-            return controllerActionDescriptors
-                    .OrderByDescending(
-                        actionDescriptor => ScoreByParameterNameAndConvertibility.Score(
-                            GetBindingInfo(actionDescriptor).ConfigureAwait(false).GetAwaiter().GetResult().Item1,
-                            routeContext,
-                            actionDescriptor)
-                    ).First();
-        }
-
-        /// <inheritdoc />
         /// <summary>Return the single best matching action.</summary>
+        /// <param name="routeContext"></param>
         /// <param name="actions">The set of actions that satisfy all constraints.</param>
         /// <returns>A list of the best matching actions.</returns>
-        protected override IReadOnlyList<ActionDescriptor> SelectBestActions(IReadOnlyList<ActionDescriptor> actions)
+        protected virtual IReadOnlyList<ActionDescriptor> SelectBestActions(RouteContext routeContext, IReadOnlyList<ActionDescriptor> actions)
         {
-            var controllerActionDescriptors = actions?.OfType<ControllerActionDescriptor>();
-
-            if ( actions==null ||  controllerActionDescriptors.Count() < 2)
+            if (actions == null || actions.Count() < 2)
                 return actions;
 
-            return Array.AsReadOnly( controllerActionDescriptors
-                .OrderByDescending(
-                    actionDescriptor => ScoreByParameterNameAndConvertibility.Score(
-                                GetBindingInfo(actionDescriptor).ConfigureAwait(false).GetAwaiter().GetResult().Item1,
-                                routeContext,
-                                actionDescriptor)
-                ).Take(1).ToArray());
+            return actionDisambiguator.Choose(routeContext, actions);
         }
 
-         async Task<(Dictionary<string, object>, Dictionary<ModelMetadata,object>)> GetBindingInfo(
-            ControllerActionDescriptor actionDescriptor)
+        Cache Current
         {
-            if (actionDescriptor == null)throw new ArgumentNullException(nameof(actionDescriptor));
-
-            var bindingResult = (new Dictionary<string, object>(), new Dictionary<ModelMetadata, object>());
-
-            var parameterBindingInfo = 
-                    GetParameterBindingInfo(
-                        modelBinderFactory,
-                        modelMetadataProvider,
-                        actionDescriptor,
-                        mvcOptions);
-
-            var propertyBindingInfo = 
-                    GetPropertyBindingInfo(modelBinderFactory, modelMetadataProvider, actionDescriptor);
-
-            if (parameterBindingInfo == null && propertyBindingInfo == null)
-                return bindingResult;
-
-            //Bind(ControllerContext controllerContext, object controller, Dictionary<string, object> arguments)
-
-            var actionContext = new ActionContext(routeContext.HttpContext, routeContext.RouteData, actionDescriptor);
-
-            var controllerContext = new ControllerContext(actionContext)
+            get
             {
-                ValueProviderFactories = 
-                    new CopyOnWriteList<IValueProviderFactory>(mvcOptions.ValueProviderFactories.ToArray()),                
-            };
-            controllerContext.ModelState.MaxAllowedErrors = mvcOptions.MaxModelValidationErrors;
+                var actions = actionDescriptorCollectionProvider.ActionDescriptors;
+                var cache = Volatile.Read(ref _cache);
 
-            var valueProvider = await CompositeValueProvider.CreateAsync(controllerContext);
-
-            var parameters = actionDescriptor.Parameters;
-
-            if(parameterBindingInfo!=null)for (var i = 0; i < parameters.Count; i++)
-            {
-                var parameter = parameters[i];
-                var bindingInfo = parameterBindingInfo[i];
-                var modelMetadata = bindingInfo.ModelMetadata;
-
-                if (!modelMetadata.IsBindingAllowed)
+                if (cache != null && cache.Version == actions.Version)
                 {
-                    continue;
+                    return cache;
                 }
 
-                var result = await parameterBinder.BindModelAsync(
-                    controllerContext,
-                    bindingInfo.ModelBinder,
-                    valueProvider,
-                    parameter,
-                    modelMetadata,
-                    value: null);
-
-                if (result.IsModelSet)
-                {
-                    bindingResult.Item1[parameter.Name] = result.Model;
-                }
+                cache = new Cache(actions);
+                Volatile.Write(ref _cache, cache);
+                return cache;
             }
-
-            var properties = actionDescriptor.BoundProperties;
-            for (var i = 0; i < properties.Count; i++)
-            {
-                var property = properties[i];
-                var bindingInfo = propertyBindingInfo[i];
-                var modelMetadata = bindingInfo.ModelMetadata;
-
-                if (!modelMetadata.IsBindingAllowed)
-                {
-                    continue;
-                }
-
-                var result = await parameterBinder.BindModelAsync(
-                   controllerContext,
-                   bindingInfo.ModelBinder,
-                   valueProvider,
-                   property,
-                   modelMetadata,
-                   value: null);
-
-                if (result.IsModelSet)
-                {
-                    //PropertyValueSetter.SetValue(bindingInfo.ModelMetadata, controller, result.Model);
-                    bindingResult.Item2[bindingInfo.ModelMetadata] = result.Model;
-                }
-            }
-
-            return bindingResult;
         }
 
-        static BinderItem[] GetParameterBindingInfo(
-            IModelBinderFactory modelBinderFactory,
-            IModelMetadataProvider modelMetadataProvider,
-            ControllerActionDescriptor actionDescriptor,
-            MvcOptions mvcOptions)
+        public IReadOnlyList<ActionDescriptor> SelectCandidates(RouteContext context)
         {
-            var parameters = actionDescriptor.Parameters;
-            if (parameters==null || parameters.Count == 0){return null;}
+            if (context == null){throw new ArgumentNullException(nameof(context));}
 
-            var parameterBindingInfo = new BinderItem[parameters.Count];
-            for (var i = 0; i < parameters.Count; i++)
+            var cache = Current;
+
+            // The Cache works based on a string[] of the route values in a pre-calculated order. This code extracts
+            // those values in the correct order.
+            var keys = cache.RouteKeys;
+            var values = new string[keys.Length];
+            for (var i = 0; i < keys.Length; i++)
             {
-                var parameter = parameters[i];
+                context.RouteData.Values.TryGetValue(keys[i], out object value);
 
-                ModelMetadata metadata;
-                if (mvcOptions.AllowValidatingTopLevelNodes &&
-                    modelMetadataProvider is ModelMetadataProvider modelMetadataProviderBase &&
-                    parameter is ControllerParameterDescriptor controllerParameterDescriptor)
+                if (value != null)
                 {
-                    // The default model metadata provider derives from ModelMetadataProvider
-                    // and can therefore supply information about attributes applied to parameters.
-                    metadata = modelMetadataProviderBase.GetMetadataForParameter(controllerParameterDescriptor.ParameterInfo);
+                    values[i] = value as string ?? Convert.ToString(value);
                 }
-                else
+            }
+
+            if (cache.OrdinalEntries.TryGetValue(values, out var matchingRouteValues) ||
+                cache.OrdinalIgnoreCaseEntries.TryGetValue(values, out matchingRouteValues))
+            {
+                Debug.Assert(matchingRouteValues != null);
+                return matchingRouteValues;
+            }
+
+            logger.NoActionsMatched(context.RouteData.Values);
+            return EmptyActions;
+        }
+
+        public ActionDescriptor SelectBestCandidate(RouteContext context, IReadOnlyList<ActionDescriptor> candidates)
+        {
+            if (context == null)throw new ArgumentNullException(nameof(context));
+            if (candidates == null)throw new ArgumentNullException(nameof(candidates));
+
+            var matches = EvaluateActionConstraints(context, candidates);
+
+            var finalMatches = SelectBestActions(context, matches);
+            if (finalMatches == null || finalMatches.Count == 0)
+            {
+                return null;
+            }
+            else if (finalMatches.Count == 1)
+            {
+                var selectedAction = finalMatches[0];
+
+                return selectedAction;
+            }
+            else
+            {
+                var actionNames = string.Join(
+                    Environment.NewLine,
+                    finalMatches.Select(a => a.DisplayName));
+
+                logger.AmbiguousActions(actionNames);
+
+                var message = string.Format("Multiple actions matched. The following actions matched route data and had all constraints satisfied:{0}{0}{1}",
+                    Environment.NewLine,
+                    actionNames);
+
+                throw new AmbiguousActionException(message);
+            }
+        }
+
+        IReadOnlyList<ActionDescriptor> EvaluateActionConstraints(
+            RouteContext context,
+            IReadOnlyList<ActionDescriptor> actions)
+        {
+            var candidates = new List<ActionSelectorCandidate>();
+
+            // Perf: Avoid allocations
+            for (var i = 0; i < actions.Count; i++)
+            {
+                var action = actions[i];
+                var constraints = actionConstraintCache.GetActionConstraints(context.HttpContext, action);
+                candidates.Add(new ActionSelectorCandidate(action, constraints));
+            }
+
+            var matches = EvaluateActionConstraintsCore(context, candidates, startingOrder: null);
+
+            List<ActionDescriptor> results = null;
+            if (matches != null)
+            {
+                results = new List<ActionDescriptor>(matches.Count);
+                // Perf: Avoid allocations
+                for (var i = 0; i < matches.Count; i++)
                 {
-                    // For backward compatibility, if there's a custom model metadata provider that
-                    // only implements the older IModelMetadataProvider interface, access the more
-                    // limited metadata information it supplies. In this scenario, validation attributes
-                    // are not supported on parameters.
-                    metadata = modelMetadataProvider.GetMetadataForType(parameter.ParameterType);
+                    var candidate = matches[i];
+                    results.Add(candidate.Action);
+                }
+            }
+
+            return results;
+        }
+
+        IReadOnlyList<ActionSelectorCandidate> EvaluateActionConstraintsCore(
+            RouteContext context,
+            IReadOnlyList<ActionSelectorCandidate> candidates,
+            int? startingOrder)
+        {
+            // Find the next group of constraints to process. This will be the lowest value of
+            // order that is higher than startingOrder.
+            int? order = null;
+
+            // Perf: Avoid allocations
+            for (var i = 0; i < candidates.Count; i++)
+            {
+                var candidate = candidates[i];
+                if (candidate.Constraints != null)
+                {
+                    for (var j = 0; j < candidate.Constraints.Count; j++)
+                    {
+                        var constraint = candidate.Constraints[j];
+                        if ((startingOrder == null || constraint.Order > startingOrder) &&
+                            (order == null || constraint.Order < order))
+                        {
+                            order = constraint.Order;
+                        }
+                    }
+                }
+            }
+
+            // If we don't find a next then there's nothing left to do.
+            if (order == null)
+            {
+                return candidates;
+            }
+
+            // Since we have a constraint to process, bisect the set of actions into those with and without a
+            // constraint for the current order.
+            var actionsWithConstraint = new List<ActionSelectorCandidate>();
+            var actionsWithoutConstraint = new List<ActionSelectorCandidate>();
+
+            var constraintContext = new ActionConstraintContext();
+            constraintContext.Candidates = candidates;
+            constraintContext.RouteContext = context;
+
+            // Perf: Avoid allocations
+            for (var i = 0; i < candidates.Count; i++)
+            {
+                var candidate = candidates[i];
+                var isMatch = true;
+                var foundMatchingConstraint = false;
+
+                if (candidate.Constraints != null)
+                {
+                    constraintContext.CurrentCandidate = candidate;
+                    for (var j = 0; j < candidate.Constraints.Count; j++)
+                    {
+                        var constraint = candidate.Constraints[j];
+                        if (constraint.Order == order)
+                        {
+                            foundMatchingConstraint = true;
+
+                            if (!constraint.Accept(constraintContext))
+                            {
+                                isMatch = false;
+                                MvcCoreLoggerExtensions.ConstraintMismatch(logger,
+                                    candidate.Action.DisplayName,
+                                    candidate.Action.Id,
+                                    constraint);
+                                break;
+                            }
+                        }
+                    }
                 }
 
-                var binder = modelBinderFactory.CreateBinder(new ModelBinderFactoryContext
+                if (isMatch && foundMatchingConstraint)
                 {
-                    BindingInfo = parameter.BindingInfo,
-                    Metadata = metadata,
-                    CacheToken = parameter,
-                });
-
-                parameterBindingInfo[i] = new BinderItem(binder, metadata);
-            }
-
-            return parameterBindingInfo;
-        }
-
-        static BinderItem[] GetPropertyBindingInfo(
-            IModelBinderFactory modelBinderFactory,
-            IModelMetadataProvider modelMetadataProvider,
-            ControllerActionDescriptor actionDescriptor)
-        {
-            var properties = actionDescriptor.BoundProperties;
-            if (properties==null || properties.Count == 0){return null;}
-
-            var propertyBindingInfo = new BinderItem[properties.Count];
-            var controllerType = actionDescriptor.ControllerTypeInfo.AsType();
-            for (var i = 0; i < properties.Count; i++)
-            {
-                var property = properties[i];
-                var metadata = modelMetadataProvider.GetMetadataForProperty(controllerType, property.Name);
-                var binder = modelBinderFactory.CreateBinder(new ModelBinderFactoryContext
+                    actionsWithConstraint.Add(candidate);
+                }
+                else if (isMatch)
                 {
-                    BindingInfo = property.BindingInfo,
-                    Metadata = metadata,
-                    CacheToken = property,
-                });
-
-                propertyBindingInfo[i] = new BinderItem(binder, metadata);
+                    actionsWithoutConstraint.Add(candidate);
+                }
             }
 
-            return propertyBindingInfo;
-        }
-
-        struct BinderItem
-        {
-            public BinderItem(IModelBinder modelBinder, ModelMetadata modelMetadata)
+            // If we have matches with constraints, those are better so try to keep processing those
+            if (actionsWithConstraint.Count > 0)
             {
-                ModelBinder = modelBinder;
-                ModelMetadata = modelMetadata;
+                var matches = EvaluateActionConstraintsCore(context, actionsWithConstraint, order);
+                if (matches?.Count > 0)
+                {
+                    return matches;
+                }
             }
 
-            public IModelBinder ModelBinder { get; }
-
-            public ModelMetadata ModelMetadata { get; }
+            // If the set of matches with constraints can't work, then process the set without constraints.
+            if (actionsWithoutConstraint.Count == 0)
+            {
+                return null;
+            }
+            else
+            {
+                return EvaluateActionConstraintsCore(context, actionsWithoutConstraint, order);
+            }
         }
-   }
+
+        // The action selector cache stores a mapping of route-values -> action descriptors for each known set of
+        // of route-values. We actually build two of these mappings, one for case-sensitive (fast path) and one for
+        // case-insensitive (slow path).
+        //
+        // This is necessary because MVC routing/action-selection is always case-insensitive. So we're going to build
+        // a case-sensitive dictionary that will behave like the a case-insensitive dictionary when you hit one of the
+        // canonical entries. When you don't hit a case-sensitive match it will try the case-insensitive dictionary
+        // so you still get correct behaviors.
+        //
+        // The difference here is because while MVC is case-insensitive, doing a case-sensitive comparison is much 
+        // faster. We also expect that most of the URLs we process are canonically-cased because they were generated
+        // by Url.Action or another routing api.
+        //
+        // This means that for a set of actions like:
+        //      { controller = "Home", action = "Index" } -> HomeController::Index1()
+        //      { controller = "Home", action = "index" } -> HomeController::Index2()
+        //
+        // Both of these actions match "Index" case-insensitively, but there exist two known canonical casings,
+        // so we will create an entry for "Index" and an entry for "index". Both of these entries match **both**
+        // actions.
+        class Cache
+        {
+            public Cache(ActionDescriptorCollection actions)
+            {
+                // We need to store the version so the cache can be invalidated if the actions change.
+                Version = actions.Version;
+
+                // We need to build two maps for all of the route values.
+                OrdinalEntries = new Dictionary<string[], List<ActionDescriptor>>(StringArrayComparer.Ordinal);
+                OrdinalIgnoreCaseEntries = new Dictionary<string[], List<ActionDescriptor>>(StringArrayComparer.OrdinalIgnoreCase);
+
+                // We need to first identify of the keys that action selection will look at (in route data). 
+                // We want to only consider conventionally routed actions here.
+                var routeKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                for (var i = 0; i < actions.Items.Count; i++)
+                {
+                    var action = actions.Items[i];
+                    if (action.AttributeRouteInfo == null)
+                    {
+                        // This is a conventionally routed action - so make sure we include its keys in the set of
+                        // known route value keys.
+                        foreach (var kvp in action.RouteValues)
+                        {
+                            routeKeys.Add(kvp.Key);
+                        }
+                    }
+                }
+
+                // We need to hold on to an ordered set of keys for the route values. We'll use these later to
+                // extract the set of route values from an incoming request to compare against our maps of known
+                // route values.
+                RouteKeys = routeKeys.ToArray();
+
+                for (var i = 0; i < actions.Items.Count; i++)
+                {
+                    var action = actions.Items[i];
+                    if (action.AttributeRouteInfo != null)
+                    {
+                        // This only handles conventional routing. Ignore attribute routed actions.
+                        continue;
+                    }
+
+                    // This is a conventionally routed action - so we need to extract the route values associated
+                    // with this action (in order) so we can store them in our dictionaries.
+                    var routeValues = new string[RouteKeys.Length];
+                    for (var j = 0; j < RouteKeys.Length; j++)
+                    {
+                        action.RouteValues.TryGetValue(RouteKeys[j], out routeValues[j]);
+                    }
+
+                    if (!OrdinalIgnoreCaseEntries.TryGetValue(routeValues, out var entries))
+                    {
+                        entries = new List<ActionDescriptor>();
+                        OrdinalIgnoreCaseEntries.Add(routeValues, entries);
+                    }
+
+                    entries.Add(action);
+
+                    // We also want to add the same (as in reference equality) list of actions to the ordinal entries.
+                    // We'll keep updating `entries` to include all of the actions in the same equivalence class -
+                    // meaning, all conventionally routed actions for which the route values are equalignoring case.
+                    //
+                    // `entries` will appear in `OrdinalIgnoreCaseEntries` exactly once and in `OrdinalEntries` once
+                    // for each variation of casing that we've seen.
+                    if (!OrdinalEntries.ContainsKey(routeValues))
+                    {
+                        OrdinalEntries.Add(routeValues, entries);
+                    }
+                }
+            }
+
+            public int Version { get; }
+
+            public string[] RouteKeys { get; }
+
+            public Dictionary<string[], List<ActionDescriptor>> OrdinalEntries { get; }
+
+            public Dictionary<string[], List<ActionDescriptor>> OrdinalIgnoreCaseEntries { get; }
+        }
+
+        class StringArrayComparer : IEqualityComparer<string[]>
+        {
+            public static readonly StringArrayComparer Ordinal = new StringArrayComparer(StringComparer.Ordinal);
+
+            public static readonly StringArrayComparer OrdinalIgnoreCase = new StringArrayComparer(StringComparer.OrdinalIgnoreCase);
+
+            readonly StringComparer _valueComparer;
+
+            StringArrayComparer(StringComparer valueComparer)
+            {
+                _valueComparer = valueComparer;
+            }
+
+            public bool Equals(string[] x, string[] y)
+            {
+                if (object.ReferenceEquals(x, y))
+                {
+                    return true;
+                }
+
+                if (x == null ^ y == null)
+                {
+                    return false;
+                }
+
+                if (x.Length != y.Length)
+                {
+                    return false;
+                }
+
+                for (var i = 0; i < x.Length; i++)
+                {
+                    if (string.IsNullOrEmpty(x[i]) && string.IsNullOrEmpty(y[i]))
+                    {
+                        continue;
+                    }
+
+                    if (!_valueComparer.Equals(x[i], y[i]))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            public int GetHashCode(string[] obj)
+            {
+                if (obj == null)
+                {
+                    return 0;
+                }
+
+                var hash = new HashCodeCombiner();
+                for (var i = 0; i < obj.Length; i++)
+                {
+                    var o = obj[i];
+
+                    // Route values define null and "" to be equivalent.
+                    if (string.IsNullOrEmpty(o))
+                    {
+                        o = null;
+                    }
+                    hash.Add(o, _valueComparer);
+                }
+
+                return hash.CombinedHash;
+            }
+        }
+    }
+
+    static class MvcCoreLoggerExtensions
+    {
+        public static void AmbiguousActions(this ILogger logger, string actionNames)
+        {
+            (LoggerMessage.Define<string>(
+                LogLevel.Error,
+                1,
+                "Request matched multiple actions resulting in ambiguity. Matching actions: {AmbiguousActions}"))
+              (logger, actionNames, null);
+        }
+
+        public static void ConstraintMismatch(
+            this ILogger logger,
+            string actionName,
+            string actionId,
+            IActionConstraint actionConstraint)
+        {
+            LoggerMessage.Define<string, string, IActionConstraint>(
+                    LogLevel.Debug,
+                    2,
+                    "Action '{ActionName}' with id '{ActionId}' did not match the constraint '{ActionConstraint}'")
+                (logger, actionName, actionId, actionConstraint, null);
+        }
+        public static void NoActionsMatched(this ILogger logger, IDictionary<string, object> routeValueDictionary)
+        {
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
+                string[] routeValues = null;
+                if (routeValueDictionary != null)
+                {
+                    routeValues = routeValueDictionary
+                        .Select(pair => pair.Key + "=" + Convert.ToString(pair.Value))
+                        .ToArray();
+                }
+
+                (LoggerMessage.Define<string[]>(
+                    LogLevel.Debug,
+                    3,
+                    "No actions matched the current request. Route values: {RouteValues}"))
+                  (logger, routeValues, null);
+            }
+        }
+    }
 }
