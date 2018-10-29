@@ -31,7 +31,7 @@ namespace ComponentAsService2.UseComponentAsService
                 ).ToArray();
 
             var score = convertibleMatches.Sum(m=>m.Value)
-                        - 10 * Math.Max(actualValues.Count, (expectedParameters?.Length??0))
+                        - 1000 * Math.Max(actualValues.Count, (expectedParameters?.Length??0))
                         + convertibleMatches.Sum(m=>TypePreferenceScore(m.ParameterType)) ;
             return score;
         }
@@ -40,11 +40,13 @@ namespace ComponentAsService2.UseComponentAsService
         {
             if (type == typeof(string))
                 return 1;
+            else if (type.IsEnum)
+                return 10;
             else if (type.IsPrimitive )
                 return PrimitiveTypePreferences.ContainsKey(type) ? PrimitiveTypePreferences[type] : 1;
             else
             {
-                return 5 + type.GetProperties().Length;
+                return 10;
             }
         }
 
@@ -55,19 +57,19 @@ namespace ComponentAsService2.UseComponentAsService
                 var convertor = TypeDescriptor.GetConverter(toType);
                 if (routeValue.GetType() == toType)
                 {
-                    return 10;
+                    return 1000;
                 }
-                if (routeValue is string)
+                if (routeValue is string s)
                 {
-                    return convertor.ConvertFromString(routeValue as string) != null ? 8 : 0;
+                    return convertor.ConvertFromString(s) != null ? 900 : 0;
                 }
                 else if(convertor.CanConvertFrom(routeValue.GetType()))
                 {
-                    return convertor.ConvertFrom(routeValue) != null ? 8 : 0;
+                    return convertor.ConvertFrom(routeValue) != null ? 900 : 0;
                 }
                 else
                 {
-                    return convertor.ConvertFromString(routeValue.ToString()) != null ? 8 : 0;
+                    return convertor.ConvertFromString(routeValue.ToString()) != null ? 900 : 0;
                 }
             }
             catch (Exception e){return 0;}
@@ -80,6 +82,7 @@ namespace ComponentAsService2.UseComponentAsService
             {typeof(decimal),4},
             {typeof(long),4},
             {typeof(int), 5},
+            {typeof(bool), 5}
         };
     }
 }
