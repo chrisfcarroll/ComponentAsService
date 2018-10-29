@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace ComponentAsService2.UseComponentAsService
 {
@@ -16,7 +17,7 @@ namespace ComponentAsService2.UseComponentAsService
             
             var convertibleMatches =
                 (expectedParameters == null
-                    ? new []{ new {Key="",ParameterType=typeof(string),Value=null as object} }
+                    ? new []{ new {Key="",ParameterType=typeof(string),Value=0} }
                     : actualValues
                         .Join(expectedParameters,
                             kv => kv.Key,
@@ -27,12 +28,10 @@ namespace ComponentAsService2.UseComponentAsService
                                 e.ParameterType,
                                 Value = TryConvert(e.ParameterType, a.Value),
                             })
-                ).Where(x => x.Value != null).ToArray();
+                ).ToArray();
 
-            var score = 10*(convertibleMatches.Count() 
-                            - actualValues.Count
-                            - (expectedParameters?.Length??0)
-                            )
+            var score = convertibleMatches.Sum(m=>m.Value)
+                        - 10 * Math.Max(actualValues.Count, (expectedParameters?.Length??0))
                         + convertibleMatches.Sum(m=>TypePreferenceScore(m.ParameterType)) ;
             return score;
         }
@@ -40,7 +39,7 @@ namespace ComponentAsService2.UseComponentAsService
         static int TypePreferenceScore(Type type)
         {
             if (type == typeof(string))
-                return 0;
+                return 1;
             else if (type.IsPrimitive )
                 return PrimitiveTypePreferences.ContainsKey(type) ? PrimitiveTypePreferences[type] : 1;
             else
@@ -49,25 +48,29 @@ namespace ComponentAsService2.UseComponentAsService
             }
         }
 
-        static object TryConvert(Type toType, object routeValue)
+        static int TryConvert(Type toType, object routeValue)
         {
             try
             {
                 var convertor = TypeDescriptor.GetConverter(toType);
+                if (routeValue.GetType() == toType)
+                {
+                    return 10;
+                }
                 if (routeValue is string)
                 {
-                    return convertor.ConvertFromString(routeValue as string);
+                    return convertor.ConvertFromString(routeValue as string) != null ? 8 : 0;
                 }
                 else if(convertor.CanConvertFrom(routeValue.GetType()))
                 {
-                    return convertor.ConvertFrom(routeValue);
+                    return convertor.ConvertFrom(routeValue) != null ? 8 : 0;
                 }
                 else
                 {
-                    return convertor.ConvertFromString(routeValue.ToString());
+                    return convertor.ConvertFromString(routeValue.ToString()) != null ? 8 : 0;
                 }
             }
-            catch (Exception e){return null;}
+            catch (Exception e){return 0;}
         }
 
         static readonly Dictionary<Type,int> PrimitiveTypePreferences=new Dictionary<Type, int>
@@ -75,8 +78,8 @@ namespace ComponentAsService2.UseComponentAsService
             {typeof(double),2},
             {typeof(float),3},
             {typeof(decimal),4},
-            {typeof(long),5},
-            {typeof(int), 6},
+            {typeof(long),4},
+            {typeof(int), 5},
         };
     }
 }

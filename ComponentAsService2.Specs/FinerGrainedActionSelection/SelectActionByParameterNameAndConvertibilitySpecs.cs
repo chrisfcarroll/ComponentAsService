@@ -17,10 +17,10 @@ namespace ComponentAsService2.Specs.FinerGrainedActionSelection
     public class SelectActionByParameterNameAndConvertibilitySpecs : BaseForCreatingActionDescriptors
     {
         [Theory]
-        [InlineData(typeof(bool)  ,typeof(bool) ,  00 - 20 + 0 - 20 )]
-        [InlineData(typeof(string),typeof(string), 20 - 20 + 0 - 20 )]
-        [InlineData(typeof(int)   ,typeof(int) ,   20 - 20 + 2 - 20)]
-        [InlineData(typeof(float) ,typeof(float) , 20 - 20 + 4 - 20 )]
+        [InlineData(typeof(bool)  ,typeof(bool) ,   00 - 20 +  2 )]
+        [InlineData(typeof(string),typeof(string),  16 - 20 +  2 )]
+        [InlineData(typeof(int)   ,typeof(int) ,    18 - 20 + 10 )]
+        [InlineData(typeof(double),typeof(double) , 18 - 20 +  4 )]
         public void ScoreGivenRouteValuesA1point0B1_IsAsPerAlgorithm(Type typeA, Type typeB, int expectedScore)
         {
             var incomingValues = new RouteValueDictionary(new {a = 1.0, b=1});
@@ -39,10 +39,10 @@ namespace ComponentAsService2.Specs.FinerGrainedActionSelection
                 .ShouldBe( expectedScore );
         }
         [Theory]
-        [InlineData( typeof(bool)  ,  00 - 30 + 0 - 10 )]
-        [InlineData( typeof(float) ,  10 - 30 + 2 - 10 )]
-        [InlineData( typeof(string),  10 - 30 + 0 - 10 )]
-        [InlineData( typeof(int)   ,  10 - 30 + 1 - 10 )]
+        [InlineData( typeof(bool)  ,  00 - 30 + 1 )]
+        [InlineData( typeof(float) ,   8 - 30 + 3 )]
+        [InlineData( typeof(string),   8 - 30 + 1 )]
+        [InlineData( typeof(int)   ,  10 - 30 + 5 )]
         public void ScoreGivenRouteValuesA1BBCC_IsAsPerAlgorithm(Type type, int expectedScore)
         {
             var incomingValues = new RouteValueDictionary(new {a = 1, b="b", c="c"});
