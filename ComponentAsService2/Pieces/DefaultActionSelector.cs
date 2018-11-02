@@ -18,10 +18,10 @@ using Microsoft.AspNetCore.Mvc.Internal;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 
-namespace Component.As.Service.UseComponentAsService
+namespace Component.As.Service.Pieces
 {
 
-    // ReSharper disable All 
+    // ReSharper disable All because this code is copied verbatim from https://github.com/aspnet/Mvc/tree/release/2.1/src
 
   /// <summary>
   /// A default <see cref="T:Microsoft.AspNetCore.Mvc.Infrastructure.IActionSelector" /> implementation.

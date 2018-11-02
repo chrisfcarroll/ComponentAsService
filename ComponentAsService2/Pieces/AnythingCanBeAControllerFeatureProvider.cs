@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc.Controllers;
 
-namespace Component.As.Service.UseComponentAsService
+namespace Component.As.Service.Pieces
 {
     public class AnythingCanBeAControllerFeatureProvider : ControllerFeatureProvider, ICollection<TypeInfo>
     {
@@ -23,9 +23,19 @@ namespace Component.As.Service.UseComponentAsService
 
         TypeInfo[] moreControllerTypes;
         
+        
+        /// <summary>
+        /// Add <paramref name="typeInfos"/> to the list of types to be served as controllers.
+        /// </summary>
+        /// <param name="typeInfos"></param>
         public void Add(IEnumerable<TypeInfo> typeInfos) => moreControllerTypes = moreControllerTypes.Union( typeInfos ).ToArray();
 
-        public void Add(TypeInfo item) => moreControllerTypes = moreControllerTypes.Union(new[] {item}).ToArray();
+        /// <inheritdoc />
+        /// <summary>
+        /// Add <paramref name="type" /> to the list of types to be served as controllers.
+        /// </summary>
+        /// <param name="type"></param>
+        public void Add(TypeInfo type) => moreControllerTypes = moreControllerTypes.Union(new[] {type}).ToArray();
 
         public void Clear() => moreControllerTypes = new TypeInfo[0];
 

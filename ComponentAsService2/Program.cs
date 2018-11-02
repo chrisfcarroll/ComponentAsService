@@ -11,7 +11,9 @@ namespace Component.As.Service
         }
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>();
+            WebHost
+                .CreateDefaultBuilder(args)
+                .ConfigureServices(services=> services.AddComponentAsService())
+                .Configure(app=>app.UseComponentAsService<ComponentAsServiceDiagnostics>() );
     }
 }

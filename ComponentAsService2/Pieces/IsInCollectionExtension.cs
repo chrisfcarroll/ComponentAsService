@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace Component.As.Service.UseComponentAsService
+namespace Component.As.Service.Pieces
 {
     static class IsInCollectionExtension
     {

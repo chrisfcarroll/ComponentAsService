@@ -14,7 +14,7 @@ using Microsoft.DotNet.PlatformAbstractions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Component.As.Service.UseComponentAsService
+namespace Component.As.Service.Pieces
 {
     public class FinerGrainedActionSelector : IActionSelector
     {
@@ -404,6 +404,7 @@ namespace Component.As.Service.UseComponentAsService
 
             public bool Equals(string[] x, string[] y)
             {
+                // ReSharper disable RedundantNameQualifier
                 if (object.ReferenceEquals(x, y))
                 {
                     return true;
@@ -414,6 +415,7 @@ namespace Component.As.Service.UseComponentAsService
                     return false;
                 }
 
+                // ReSharper disable PossibleNullReferenceException
                 if (x.Length != y.Length)
                 {
                     return false;

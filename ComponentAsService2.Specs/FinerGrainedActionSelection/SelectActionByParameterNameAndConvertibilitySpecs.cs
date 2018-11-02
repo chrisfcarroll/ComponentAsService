@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Component.As.Service.UseComponentAsService;
+using Component.As.Service.Pieces;
 using Extensions.Logging.ListOfString;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
@@ -24,13 +24,12 @@ namespace Component.As.Service.Specs.FinerGrainedActionSelection
         public void ScoreGivenRouteValuesA1BBCC_IsAsPerAlgorithm(Type type, int expectedScore)
         {
             var incomingValues = new RouteValueDictionary(new {a = 1, b="b", c="c"});
-            var rc = CreateRouteContext("POST");
             var action = new ActionDescriptor
             {
                 Parameters = new[]{new ParameterDescriptor {Name = "a", ParameterType = type}}
             };
 
-            ScoreByParameterNameAndConvertibility.Score(incomingValues, rc,action).ShouldBe( expectedScore );
+            ScoreByParameterNameAndConvertibility.Score(incomingValues,action).ShouldBe( expectedScore );
         }
 
 
@@ -43,7 +42,6 @@ namespace Component.As.Service.Specs.FinerGrainedActionSelection
         public void ScoreGivenRouteValuesA1point0B1_IsAsPerAlgorithm(Type typeA, Type typeB, int expectedScore)
         {
             var incomingValues = new RouteValueDictionary(new {a = 1.0, b=1});
-            var rc = CreateRouteContext("POST");
             var action = new ActionDescriptor
             {
                 Parameters = new[]
@@ -54,7 +52,7 @@ namespace Component.As.Service.Specs.FinerGrainedActionSelection
             };
 
             ScoreByParameterNameAndConvertibility
-                .Score(incomingValues,rc, action)
+                .Score(incomingValues, action)
                 .ShouldBe( expectedScore );
         }
 
@@ -109,11 +107,8 @@ namespace Component.As.Service.Specs.FinerGrainedActionSelection
         public void ChoosesActionWith2MatchingParametersOverActionWith1MatchingParameter()
         {
             // Arrange
-            var loglines= new List<string>();
-            var loggerFactory = new LoggerFactory().AddStringListLogger(loglines);
 
             var incomingValues= new RouteValueDictionary(new{a=1, b=2});
-            var routeContext = CreateRouteContext("POST", incomingValues);
             var actions = new[]
             {
                 new ControllerActionDescriptor
@@ -155,7 +150,7 @@ namespace Component.As.Service.Specs.FinerGrainedActionSelection
 
             // Act
             actions
-                .OrderByDescending(a => ScoreByParameterNameAndConvertibility.Score(incomingValues, routeContext, a))
+                .OrderByDescending(a => ScoreByParameterNameAndConvertibility.Score(incomingValues, a))
                 .Select(a=>a.DisplayName)               
                 .ShouldEqualByValue(new[] {"A3", "A2", "A1"});
         }

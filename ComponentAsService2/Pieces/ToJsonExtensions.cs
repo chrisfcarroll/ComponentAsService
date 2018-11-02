@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace Component.As.Service.UseComponentAsService
+namespace Component.As.Service.Pieces
 {
     static class ToJsonExtensions
     {

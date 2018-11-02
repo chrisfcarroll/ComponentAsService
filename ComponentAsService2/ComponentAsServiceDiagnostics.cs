@@ -1,7 +1,11 @@
-using Component.As.Service.UseComponentAsService;
+using Component.As.Service.Pieces;
 
 namespace Component.As.Service
 {
+    /// <summary>
+    /// A class that can be used to help diagnose how querystring and form values
+    /// are processed by the framework.
+    /// </summary>
     public class ComponentAsServiceDiagnostics
     {
         public bool   And(bool a, bool b) => a && b;
@@ -11,8 +15,14 @@ namespace Component.As.Service
         public string Add(string a, string b) => a +b;
 
         public string BindComplexObject(int a, DiagnosticModel diagnostic) => $"{diagnostic.ToJson()} {a}";
+
+        public string BindComplexObjects<T1,T2>(T1 diagnosticA, T2 diagnosticB) => $"{diagnosticA.ToJson()} \r\n{diagnosticB.ToJson()}";
     }
 
+    /// <summary>
+    /// A class that can be used by <see cref="ComponentAsServiceDiagnostics.BindComplexObject"/> to
+    /// help diagnose how querystring and form values are processed by the framework.
+    /// </summary>
     public class DiagnosticModel
     {
         public string A { get; set; }

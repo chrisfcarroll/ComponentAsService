@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Component.As.Service.Pieces;
 using Component.As.Service.Specs.FinerGrainedActionSelection.Tests.Microsoft.AspNetCore.Mvc.Infrastructure;
-using Component.As.Service.UseComponentAsService;
 using Microsoft.AspNetCore.Hosting.Internal;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
@@ -24,6 +24,8 @@ using Microsoft.Extensions.Options;
 using Moq;
 using TestBase;
 using Assert = Xunit.Assert;
+// ReSharper disable UnusedMember.Local
+// ReSharper disable UnusedParameter.Local
 
 namespace Component.As.Service.Specs.FinerGrainedActionSelection
 {
@@ -168,6 +170,7 @@ namespace Component.As.Service.Specs.FinerGrainedActionSelection
 
             return
                 actions
+                    // ReSharper disable ImplicitlyCapturedClosure
                     .Where(a => a.RouteValues.Any(kvp => kvp.Key == "area" && comparer.Equals(kvp.Value, area)))
                     .Where(a => a.RouteValues.Any(kvp => kvp.Key == "controller" && comparer.Equals(kvp.Value, controller)))
                     .Where(a => a.RouteValues.Any(kvp => kvp.Key == "action" && comparer.Equals(kvp.Value, action)));

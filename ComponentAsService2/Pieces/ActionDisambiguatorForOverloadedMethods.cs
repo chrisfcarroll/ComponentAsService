@@ -9,37 +9,70 @@ using Microsoft.AspNetCore.Mvc.Internal;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Routing;
 
-namespace Component.As.Service.UseComponentAsService
+namespace Component.As.Service.Pieces
 {
+    /// <summary>
+    /// A class that uses a scoring function such as <see cref="ScoreByParameterNameAndConvertibility.Score"/>
+    /// inside <see cref="Choose"/> to disambiguate Controller Methods with the same name, by inspecting how well
+    /// the incoming model values can be bound and fitted to the Method's parameters.
+    /// </summary>
     public class ActionDisambiguatorForOverloadedMethods
     {
+        public delegate int ScoreSignature(RouteContext rc, ActionDescriptor action);
+
         readonly IModelBinderFactory modelBinderFactory;
         readonly IModelMetadataProvider modelMetadataProvider;
         readonly MvcOptions mvcOptions;
         readonly ParameterBinder parameterBinder;
+        readonly ScoreSignature scoreDelegate;
 
-        public ActionDisambiguatorForOverloadedMethods(IModelBinderFactory modelBinderFactory, IModelMetadataProvider modelMetadataProvider, MvcOptions mvcOptions, ParameterBinder parameterBinder)
+        public ActionDisambiguatorForOverloadedMethods(
+            IModelBinderFactory modelBinderFactory, 
+            IModelMetadataProvider modelMetadataProvider, 
+            MvcOptions mvcOptions, 
+            ParameterBinder parameterBinder,
+            ScoreSignature scoreDelegate=null)
         {
             this.modelBinderFactory = modelBinderFactory;
             this.modelMetadataProvider = modelMetadataProvider;
             this.mvcOptions = mvcOptions;
             this.parameterBinder = parameterBinder;
+            this.scoreDelegate = scoreDelegate??Score;
         }
 
-        public IReadOnlyList<ActionDescriptor> Choose(RouteContext routeContext, IReadOnlyList<ActionDescriptor> actions)
+        /// <summary>
+        /// Given a <paramref name="routeContext"/> (which encapsulates candidate parameter values in an incoming <c>Request</c>)
+        /// and <paramref name="candidateActions"/>, choose the <c>action</c> that is best-fitted to process the
+        /// candidate parameter values.
+        ///
+        /// The default <see cref="Score"/> method uses MVC model binding and <see cref="ScoreByParameterNameAndConvertibility.Score"/>
+        /// against each <paramref name="candidateActions"/> to evaluate how well it can handle the candidate parameter values in
+        /// the <paramref name="routeContext"/>.
+        /// </summary>
+        /// <param name="routeContext"></param>
+        /// <param name="candidateActions"></param>
+        /// <returns>The best matched of the <paramref name="candidateActions"/></returns>
+        /// <remarks>
+        /// Override the default scoring by passing a <see cref="ScoreSignature"/> parameter to the constructor.
+        /// </remarks>
+        public IReadOnlyList<ActionDescriptor> Choose(RouteContext routeContext, IReadOnlyList<ActionDescriptor> candidateActions)
         {
-            if (actions==null || actions.Count < 2) return actions;
+            if (candidateActions==null || candidateActions.Count < 2) return candidateActions;
 
             var rankedChoices = 
-                actions.Select(a=> new {
-                        Action=a, 
-                        Score=ScoreByParameterNameAndConvertibility.Score(
-                                GetBindingInfo(a, routeContext).ConfigureAwait(false).GetAwaiter().GetResult().Item1,
-                                routeContext,
-                                a)})
+                candidateActions.Select(a=> new {
+                        Action= a, 
+                        Score= scoreDelegate(routeContext, a)})
                 .OrderByDescending(a=>a.Score).ToArray();
 
             return Array.AsReadOnly( new []{rankedChoices[0].Action}  );
+        }
+
+        internal int Score(RouteContext routeContext, ActionDescriptor a)
+        {
+            return ScoreByParameterNameAndConvertibility.Score(
+                GetBindingInfo(a, routeContext).ConfigureAwait(false).GetAwaiter().GetResult().Item1,
+                a);
         }
 
         async Task<(Dictionary<string, object>, Dictionary<ModelMetadata, object>)> 

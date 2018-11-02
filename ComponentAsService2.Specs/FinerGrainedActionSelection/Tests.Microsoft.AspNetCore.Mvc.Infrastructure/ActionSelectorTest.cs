@@ -26,7 +26,7 @@ using Xunit;
 //
 // Re-apply https://github/aspnet/mvc/test/Microsoft.AspNetCore.Mvc.Core.Test/Internal/ActionSelectorTest.cs to FinerGrainedActionSelector
 //
-using ActionSelector=Component.As.Service.UseComponentAsService.FinerGrainedActionSelector;
+using ActionSelector=Component.As.Service.Pieces.FinerGrainedActionSelector;
 //
 //
 
