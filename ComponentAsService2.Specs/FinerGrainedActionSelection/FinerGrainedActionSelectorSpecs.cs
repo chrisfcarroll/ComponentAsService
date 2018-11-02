@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc.Abstractions;
 using TestBase;
 using Xunit;
 
-namespace ComponentAsService2.Specs.FinerGrainedActionSelection
+namespace Component.As.Service.Specs.FinerGrainedActionSelection
 {
     public class FinerGrainedActionSelectorSpecs : BaseForCreatingActionDescriptors
     {

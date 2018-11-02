@@ -1,13 +1,12 @@
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
-using ComponentAsService2.UseComponentAsService;
 using Microsoft.AspNetCore.TestHost;
-using Xunit;
 using TestBase;
+using Xunit;
 using Xunit.Abstractions;
 
-namespace ComponentAsService2.Specs
+namespace Component.As.Service.Specs
 {
     public class ModelBindingSpecs
     {

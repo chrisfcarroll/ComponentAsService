@@ -15,7 +15,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 
-namespace ComponentAsService2.Specs.FinerGrainedActionSelection
+namespace Component.As.Service.Specs.FinerGrainedActionSelection
 {
     class ModelingBindingParameterBinderTestBase
     {

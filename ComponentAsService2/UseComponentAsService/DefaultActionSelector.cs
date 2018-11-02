@@ -5,20 +5,20 @@
 // Assembly location: C:\Program Files\dotnet\sdk\NuGetFallbackFolder\microsoft.aspnetcore.mvc.core\2.1.1\lib\netstandard2.0\Microsoft.AspNetCore.Mvc.Core.dll
 
 
-using Microsoft.AspNetCore.Mvc.Abstractions;
-using Microsoft.AspNetCore.Mvc.ActionConstraints;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using Microsoft.AspNetCore.Mvc.Abstractions;
+using Microsoft.AspNetCore.Mvc.ActionConstraints;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Internal;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Logging;
 
-namespace ComponentAsService2.UseComponentAsService
+namespace Component.As.Service.UseComponentAsService
 {
 
     // ReSharper disable All 
@@ -26,6 +26,7 @@ namespace ComponentAsService2.UseComponentAsService
   /// <summary>
   /// A default <see cref="T:Microsoft.AspNetCore.Mvc.Infrastructure.IActionSelector" /> implementation.
   /// </summary>
+  /// <remarks>Copy-pasted from https://github.com/aspnet/Mvc/tree/release/2.1/src </remarks>
   public class DefaultActionSelector : IActionSelector
   {
     private static readonly IReadOnlyList<ActionDescriptor> EmptyActions = (IReadOnlyList<ActionDescriptor>) Array.Empty<ActionDescriptor>();

@@ -9,14 +9,14 @@ using Microsoft.AspNetCore.Mvc.Internal;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Routing;
 
-namespace ComponentAsService2.UseComponentAsService
+namespace Component.As.Service.UseComponentAsService
 {
     public class ActionDisambiguatorForOverloadedMethods
     {
-        IModelBinderFactory modelBinderFactory;
-        IModelMetadataProvider modelMetadataProvider;
-        MvcOptions mvcOptions;
-        ParameterBinder parameterBinder;
+        readonly IModelBinderFactory modelBinderFactory;
+        readonly IModelMetadataProvider modelMetadataProvider;
+        readonly MvcOptions mvcOptions;
+        readonly ParameterBinder parameterBinder;
 
         public ActionDisambiguatorForOverloadedMethods(IModelBinderFactory modelBinderFactory, IModelMetadataProvider modelMetadataProvider, MvcOptions mvcOptions, ParameterBinder parameterBinder)
         {
@@ -28,13 +28,18 @@ namespace ComponentAsService2.UseComponentAsService
 
         public IReadOnlyList<ActionDescriptor> Choose(RouteContext routeContext, IReadOnlyList<ActionDescriptor> actions)
         {
-            return Array.AsReadOnly(actions
-                .OrderByDescending(
-                    actionDescriptor => ScoreByParameterNameAndConvertibility.Score(
-                        GetBindingInfo(actionDescriptor, routeContext).ConfigureAwait(false).GetAwaiter().GetResult().Item1,
-                        routeContext,
-                        actionDescriptor)
-                ).Take(1).ToArray());
+            if (actions==null || actions.Count < 2) return actions;
+
+            var rankedChoices = 
+                actions.Select(a=> new {
+                        Action=a, 
+                        Score=ScoreByParameterNameAndConvertibility.Score(
+                                GetBindingInfo(a, routeContext).ConfigureAwait(false).GetAwaiter().GetResult().Item1,
+                                routeContext,
+                                a)})
+                .OrderByDescending(a=>a.Score).ToArray();
+
+            return Array.AsReadOnly( new []{rankedChoices[0].Action}  );
         }
 
         async Task<(Dictionary<string, object>, Dictionary<ModelMetadata, object>)> 

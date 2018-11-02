@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.TestHost;
 using TestBase;
 using Xunit;
 
-namespace ComponentAsService2.Specs
+namespace Component.As.Service.Specs
 {
     public class StandardMvcBehaviourIsNotBrokenSpecs
     {

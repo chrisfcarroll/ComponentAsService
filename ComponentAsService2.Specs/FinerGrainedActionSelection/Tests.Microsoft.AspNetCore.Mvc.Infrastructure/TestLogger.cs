@@ -7,7 +7,7 @@
 using System;
 using Microsoft.Extensions.Logging;
 
-namespace ComponentAsService2.Specs.FinerGrainedActionSelection.Tests.Microsoft.AspNetCore.Mvc.Infrastructure
+namespace Component.As.Service.Specs.FinerGrainedActionSelection.Tests.Microsoft.AspNetCore.Mvc.Infrastructure
 {
   public class WriteContext
   {

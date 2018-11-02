@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace ComponentAsService2.UseComponentAsService
+namespace Component.As.Service.UseComponentAsService
 {
     public static class FinerGrainedActionSelectorExtensions
     {

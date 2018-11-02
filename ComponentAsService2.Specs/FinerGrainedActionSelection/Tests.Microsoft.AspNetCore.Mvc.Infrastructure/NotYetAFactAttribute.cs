@@ -1,6 +1,6 @@
 using System;
 
-namespace ComponentAsService2.Specs.FinerGrainedActionSelection.Tests.Microsoft.AspNetCore.Mvc.Infrastructure
+namespace Component.As.Service.Specs.FinerGrainedActionSelection.Tests.Microsoft.AspNetCore.Mvc.Infrastructure
 {
     /// <summary>Would like to be a Fact but isn't yet</summary>
     public class NotYetAFactAttribute : Attribute

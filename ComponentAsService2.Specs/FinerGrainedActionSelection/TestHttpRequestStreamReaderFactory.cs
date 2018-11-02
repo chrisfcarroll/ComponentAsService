@@ -3,7 +3,7 @@ using System.Text;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.WebUtilities;
 
-namespace ComponentAsService2.Specs.FinerGrainedActionSelection
+namespace Component.As.Service.Specs.FinerGrainedActionSelection
 {
     public class TestHttpRequestStreamReaderFactory : IHttpRequestStreamReaderFactory
     {

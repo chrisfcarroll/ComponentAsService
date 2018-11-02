@@ -11,7 +11,7 @@ using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 using Xunit;
 
-namespace ComponentAsService2.Specs.FinerGrainedActionSelection
+namespace Component.As.Service.Specs.FinerGrainedActionSelection
 {
     public class TestModelMetadataProvider : DefaultModelMetadataProvider
     {

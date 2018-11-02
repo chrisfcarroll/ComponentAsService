@@ -1,9 +1,10 @@
 ﻿using System.Linq;
 using System.Reflection;
+using Component.As.Service.UseComponentAsService;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace ComponentAsService2.UseComponentAsService
+namespace Component.As.Service
 {
     public static class AnythingCanBeAControllerExtensions
     {

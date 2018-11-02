@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc.Controllers;
 
-namespace ComponentAsService2.UseComponentAsService
+namespace Component.As.Service.UseComponentAsService
 {
     public class AnythingCanBeAControllerFeatureProvider : ControllerFeatureProvider, ICollection<TypeInfo>
     {

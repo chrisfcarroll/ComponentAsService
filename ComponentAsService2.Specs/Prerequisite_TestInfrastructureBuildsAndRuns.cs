@@ -1,10 +1,9 @@
 using System;
-using System.Net.Http;
 using Microsoft.AspNetCore.TestHost;
-using Xunit;
 using TestBase;
+using Xunit;
 
-namespace ComponentAsService2.Specs
+namespace Component.As.Service.Specs
 {
     public class Prerequisite_TestInfrastructureWorks
     {
@@ -12,7 +11,7 @@ namespace ComponentAsService2.Specs
         public void CanCreateTestServerAndCreateClient()
         {
             var client
-                = new TestServer(ComponentAsService2.Program.CreateWebHostBuilder(new string[0]))
+                = new TestServer(Program.CreateWebHostBuilder(new string[0]))
                   .CreateClient()
                   .With(c => c.BaseAddress = new Uri("https://localhost"));
             

@@ -4,9 +4,8 @@ using System.ComponentModel;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.EntityFrameworkCore.Internal;
 
-namespace ComponentAsService2.UseComponentAsService
+namespace Component.As.Service.UseComponentAsService
 {
     public static class ScoreByParameterNameAndConvertibility
     {
@@ -30,10 +29,10 @@ namespace ComponentAsService2.UseComponentAsService
                             })
                 ).ToArray();
 
-            var score = convertibleMatches.Sum(m=>m.Value)
-                        - 1000 * Math.Max(actualValues.Count, (expectedParameters?.Length??0))
-                        + convertibleMatches.Sum(m=>TypePreferenceScore(m.ParameterType)) ;
-            return score;
+            var matchScore = convertibleMatches.Sum(m=>m.Value + TypePreferenceScore(m.ParameterType)) ;
+            var mismatchScore = 
+                1000 * (Math.Max(actualValues.Count, (expectedParameters?.Length ?? 0)) - convertibleMatches.Length);
+            return matchScore - mismatchScore;
         }
 
         static int TypePreferenceScore(Type type)
@@ -55,7 +54,7 @@ namespace ComponentAsService2.UseComponentAsService
             try
             {
                 var convertor = TypeDescriptor.GetConverter(toType);
-                if (routeValue.GetType() == toType)
+                if (routeValue.GetType() == toType || toType==typeof(string) )
                 {
                     return 1000;
                 }

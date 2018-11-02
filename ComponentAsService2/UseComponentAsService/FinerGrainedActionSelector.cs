@@ -14,7 +14,7 @@ using Microsoft.DotNet.PlatformAbstractions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace ComponentAsService2.UseComponentAsService
+namespace Component.As.Service.UseComponentAsService
 {
     public class FinerGrainedActionSelector : IActionSelector
     {

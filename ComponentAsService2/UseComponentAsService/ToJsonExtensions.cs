@@ -1,8 +1,8 @@
 using Newtonsoft.Json;
 
-namespace ComponentAsService2.UseComponentAsService
+namespace Component.As.Service.UseComponentAsService
 {
-    public static class ToJsonExtensions
+    static class ToJsonExtensions
     {
         public static string ToJson<T>(this T @this)
         {

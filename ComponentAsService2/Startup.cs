@@ -1,13 +1,11 @@
-﻿using ComponentAsService2.Services;
-using ComponentAsService2.UseComponentAsService;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace ComponentAsService2
+namespace Component.As.Service
 {
     public class Startup
     {
@@ -59,7 +57,7 @@ namespace ComponentAsService2
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
             
-            app.UseComponentAsService<Calculator>();
+            app.UseComponentAsService<ComponentAsServiceDiagnostics>();
         }
     }
 }

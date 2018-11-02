@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using ComponentAsService2.UseComponentAsService;
+using Component.As.Service.UseComponentAsService;
 using Extensions.Logging.ListOfString;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
@@ -12,16 +12,34 @@ using Microsoft.Extensions.Logging;
 using TestBase;
 using Xunit;
 
-namespace ComponentAsService2.Specs.FinerGrainedActionSelection
+namespace Component.As.Service.Specs.FinerGrainedActionSelection
 {
     public class SelectActionByParameterNameAndConvertibilitySpecs : BaseForCreatingActionDescriptors
     {
         [Theory]
-        [InlineData(typeof(bool)  ,typeof(bool) ,   00   - 2000 + 10 )]
-        [InlineData(typeof(string),typeof(string),  1800 - 2000 +  2 )]
-        [InlineData(typeof(int)   ,typeof(int) ,    1900 - 2000 + 10 )]
-        [InlineData(typeof(float),typeof(float) ,   1800 - 2000 +  6 )]
-        [InlineData(typeof(double),typeof(double) , 1900 - 2000 +  4 )]
+        [InlineData( typeof(bool)  ,     5 - 2000)]
+        [InlineData( typeof(float) ,   903 - 2000)]
+        [InlineData( typeof(string),  1001 - 2000 )]
+        [InlineData( typeof(int)   ,  1005 - 2000 )]
+        public void ScoreGivenRouteValuesA1BBCC_IsAsPerAlgorithm(Type type, int expectedScore)
+        {
+            var incomingValues = new RouteValueDictionary(new {a = 1, b="b", c="c"});
+            var rc = CreateRouteContext("POST");
+            var action = new ActionDescriptor
+            {
+                Parameters = new[]{new ParameterDescriptor {Name = "a", ParameterType = type}}
+            };
+
+            ScoreByParameterNameAndConvertibility.Score(incomingValues, rc,action).ShouldBe( expectedScore );
+        }
+
+
+        [Theory]
+        [InlineData(typeof(bool)  ,typeof(bool) ,      0 + 10 -    0)]
+        [InlineData(typeof(string),typeof(string),  2000 +  2 -    0)]
+        [InlineData(typeof(int)   ,typeof(int) ,    1900 + 10 -    0)]
+        [InlineData(typeof(float),typeof(float) ,   1800 +  6 -    0)]
+        [InlineData(typeof(double),typeof(double) , 1900 +  4 -    0 )]
         public void ScoreGivenRouteValuesA1point0B1_IsAsPerAlgorithm(Type typeA, Type typeB, int expectedScore)
         {
             var incomingValues = new RouteValueDictionary(new {a = 1.0, b=1});
@@ -38,22 +56,6 @@ namespace ComponentAsService2.Specs.FinerGrainedActionSelection
             ScoreByParameterNameAndConvertibility
                 .Score(incomingValues,rc, action)
                 .ShouldBe( expectedScore );
-        }
-        [Theory]
-        [InlineData( typeof(bool)  ,     0 - 3000 + 5 )]
-        [InlineData( typeof(float) ,   900 - 3000 + 3 )]
-        [InlineData( typeof(string),   900 - 3000 + 1 )]
-        [InlineData( typeof(int)   ,  1000 - 3000 + 5 )]
-        public void ScoreGivenRouteValuesA1BBCC_IsAsPerAlgorithm(Type type, int expectedScore)
-        {
-            var incomingValues = new RouteValueDictionary(new {a = 1, b="b", c="c"});
-            var rc = CreateRouteContext("POST");
-            var action = new ActionDescriptor
-            {
-                Parameters = new[]{new ParameterDescriptor {Name = "a", ParameterType = type}}
-            };
-
-            ScoreByParameterNameAndConvertibility.Score(incomingValues, rc,action).ShouldBe( expectedScore );
         }
 
         [Fact]

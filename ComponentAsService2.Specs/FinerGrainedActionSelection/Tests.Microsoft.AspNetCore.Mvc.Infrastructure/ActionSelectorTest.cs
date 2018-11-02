@@ -15,7 +15,6 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Internal;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,11 +26,11 @@ using Xunit;
 //
 // Re-apply https://github/aspnet/mvc/test/Microsoft.AspNetCore.Mvc.Core.Test/Internal/ActionSelectorTest.cs to FinerGrainedActionSelector
 //
-using ActionSelector=ComponentAsService2.UseComponentAsService.FinerGrainedActionSelector;
+using ActionSelector=Component.As.Service.UseComponentAsService.FinerGrainedActionSelector;
 //
 //
 
-namespace ComponentAsService2.Specs.FinerGrainedActionSelection.Tests.Microsoft.AspNetCore.Mvc.Infrastructure
+namespace Component.As.Service.Specs.FinerGrainedActionSelection.Tests.Microsoft.AspNetCore.Mvc.Infrastructure
 {
     public class ActionSelectorTest
     {
