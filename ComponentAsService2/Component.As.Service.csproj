@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
+    <AssemblyName>Component.As.Service</AssemblyName>
+    <RootNamespace>Component.As.Service</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

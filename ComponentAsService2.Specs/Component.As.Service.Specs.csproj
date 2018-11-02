@@ -18,7 +18,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ComponentAsService2\ComponentAsService2.csproj" />
+      <ProjectReference Include="..\ComponentAsService2\Component.As.Service.csproj" />
     </ItemGroup>
 
 </Project>
