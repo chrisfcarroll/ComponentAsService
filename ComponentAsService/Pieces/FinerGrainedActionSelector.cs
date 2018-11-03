@@ -16,6 +16,13 @@ using Microsoft.Extensions.Options;
 
 namespace Component.As.Service.Pieces
 {
+    /// <inheritdoc />
+    /// <summary>A replacement for <see cref="Microsoft.AspNetCore.Mvc.Internal.ActionSelector"/>
+    /// which distinguishes method overloads.
+    /// By default, <see cref="ActionDisambiguatorForOverloadedMethods"/> is used to modelbind
+    /// each viable action and to score how well the route values match up to the
+    /// parameters of each candidate action.
+    /// </summary>
     public class FinerGrainedActionSelector : IActionSelector
     {
         static readonly IReadOnlyList<ActionDescriptor> EmptyActions = Array.Empty<ActionDescriptor>();
@@ -60,8 +67,10 @@ namespace Component.As.Service.Pieces
                 new ActionDisambiguatorForOverloadedMethods(modelBinderFactory, modelMetadataProvider, mvcOptions.Value, parameterBinder);
         }
 
-        /// <summary>Return the single best matching action.</summary>
-        /// <param name="routeContext"></param>
+        /// <summary>Return the single best matching action by calling the
+        /// <see cref="ActionDisambiguatorForOverloadedMethods"/> passed to
+        /// <see cref="FinerGrainedActionSelector(Microsoft.AspNetCore.Mvc.Infrastructure.IActionDescriptorCollectionProvider,Microsoft.AspNetCore.Mvc.Internal.ActionConstraintCache,Microsoft.AspNetCore.Mvc.ModelBinding.ParameterBinder,Microsoft.AspNetCore.Mvc.ModelBinding.IModelBinderFactory,Microsoft.AspNetCore.Mvc.ModelBinding.IModelMetadataProvider,Microsoft.Extensions.Options.IOptions{Microsoft.AspNetCore.Mvc.MvcOptions},Microsoft.Extensions.Logging.ILoggerFactory)"/> </summary>
+        /// <param name="routeContext">We must rely on the AspNetCore core routing to provide this.</param>
         /// <param name="actions">The set of actions that satisfy all constraints.</param>
         /// <returns>A list of the best matching actions.</returns>
         protected virtual IReadOnlyList<ActionDescriptor> SelectBestActions(RouteContext routeContext, IReadOnlyList<ActionDescriptor> actions)
@@ -90,6 +99,12 @@ namespace Component.As.Service.Pieces
             }
         }
 
+        /// <summary>
+        /// A copy of <see cref="ActionSelector.SelectCandidates"/> because it isn't virtual.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
         public IReadOnlyList<ActionDescriptor> SelectCandidates(RouteContext context)
         {
             if (context == null){throw new ArgumentNullException(nameof(context));}
@@ -121,6 +136,19 @@ namespace Component.As.Service.Pieces
             return EmptyActions;
         }
 
+        /// <summary>
+        /// A copy of <see cref="ActionSelector.SelectBestCandidate"/> because it isn't virtual.
+        /// Whittle the <paramref name="candidates"/> returned by <see cref="SelectCandidates"/>
+        /// down to one by calling
+        /// (1) <see cref="EvaluateActionConstraints"/> and
+        /// (2) <see cref="SelectBestActions"/>
+        /// If you override <see cref="SelectBestActions"/> to not always choose a single candidate,
+        /// then like <see cref="ActionSelector.SelectCandidates"/> this method may throw
+        /// a <see cref="AmbiguousActionException"/>.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
         public ActionDescriptor SelectBestCandidate(RouteContext context, IReadOnlyList<ActionDescriptor> candidates)
         {
             if (context == null)throw new ArgumentNullException(nameof(context));
