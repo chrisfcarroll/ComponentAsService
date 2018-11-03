@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.Extensions.Logging;
 
 namespace Component.As.Service.Pieces
 {
@@ -15,15 +16,24 @@ namespace Component.As.Service.Pieces
         /// otherwise <code>false</code>.</returns>
         protected override bool IsController(TypeInfo typeInfo)
         {
-            return typeInfo.IsIn(moreControllerTypes) || base.IsController(typeInfo);
+            var isMine = typeInfo.IsIn(moreControllerTypes);
+            var isBases = base.IsController(typeInfo);
+            if(moreControllerTypes.Length==0){log.LogWarning("AnythingCanBeAControllerFeatureProvider.IsController was called when moreControllerTypes is Empty.");}
+            if(isMine)log.LogInformation("AnythingCanBeAController added {controller}",typeInfo.FullName);
+            if(isBases)log.LogInformation("BaseControllerFeatureProvider added {controller}",typeInfo.FullName);
+            return isMine || isBases;
         }
 
-        public AnythingCanBeAControllerFeatureProvider(params TypeInfo[] moreControllerTypes) 
-            => this.moreControllerTypes = moreControllerTypes;
+        public AnythingCanBeAControllerFeatureProvider(ILogger<AnythingCanBeAControllerFeatureProvider> log, params TypeInfo[] moreControllerTypes)
+        {
+            this.log = log;
+            this.moreControllerTypes = moreControllerTypes??new TypeInfo[0];
+        }
 
+        readonly ILogger<AnythingCanBeAControllerFeatureProvider> log;
         TypeInfo[] moreControllerTypes;
-        
-        
+
+
         /// <summary>
         /// Add <paramref name="typeInfos"/> to the list of types to be served as controllers.
         /// </summary>

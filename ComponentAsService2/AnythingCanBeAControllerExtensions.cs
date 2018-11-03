@@ -3,6 +3,7 @@ using System.Reflection;
 using Component.As.Service.Pieces;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Component.As.Service
 {
@@ -17,13 +18,14 @@ namespace Component.As.Service
         /// </remarks>
         public static IMvcBuilder AddAnythingCanBeAController(this IMvcBuilder mvcBuilder, params TypeInfo[] controllerTypesToAdd)
         {
-            var acbControllersFeatureProvider = new AnythingCanBeAControllerFeatureProvider(controllerTypesToAdd);
+            var logger=mvcBuilder.Services.BuildServiceProvider().GetService<ILogger<AnythingCanBeAControllerFeatureProvider>>();
+            var acbControllersFeatureProvider = new AnythingCanBeAControllerFeatureProvider(logger,controllerTypesToAdd);
             var featureProviders = mvcBuilder.PartManager.FeatureProviders;
             var controllerFeatureProvider = featureProviders.OfType<ControllerFeatureProvider>().FirstOrDefault();            
             featureProviders.Remove(controllerFeatureProvider);
             featureProviders.Add(acbControllersFeatureProvider);
 
-            mvcBuilder.Services.Add(ServiceDescriptor.Singleton(acbControllersFeatureProvider));            
+            mvcBuilder.Services.Add(ServiceDescriptor.Singleton(acbControllersFeatureProvider));
             return mvcBuilder;
         }
     }

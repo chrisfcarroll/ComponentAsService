@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace Component.As.Service.Pieces
+namespace AspNetCore.Mvc.Routes.DebuggingLoggerMiddleware
 {
     static class ToJsonExtensions
     {

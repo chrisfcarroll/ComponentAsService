@@ -20,9 +20,7 @@ namespace Component.As.Service
         public static IMvcBuilder AddComponentAsService(this IServiceCollection services, params TypeInfo[] componentTypesToServe)
         {
             var mvcBuilder = services.AddMvc();
-            mvcBuilder.AddAnythingCanBeAController(componentTypesToServe);
-            mvcBuilder.AddComponentAsService(typeof(ComponentAsServiceDiagnostics).GetTypeInfo());
-            services.AddFinerGrainedActionSelector();
+            AddComponentAsService(mvcBuilder);
             return mvcBuilder;
         } 
 
@@ -32,8 +30,10 @@ namespace Component.As.Service
         /// <returns><paramref name="mvcBuilder"/></returns>
         public static IMvcBuilder AddComponentAsService(this IMvcBuilder mvcBuilder, params TypeInfo[] componentTypesToServe)
         {
+            mvcBuilder.AddApplicationPart(typeof(ComponentAsServiceDiagnostics).Assembly);
+            mvcBuilder.AddAnythingCanBeAController(componentTypesToServe);
             mvcBuilder.Services.AddFinerGrainedActionSelector();            
-            return mvcBuilder.AddAnythingCanBeAController(componentTypesToServe);
+            return mvcBuilder;
         }
 
         /// <summary>Enable types <paramref name="componentTypesToServe"/> to be served as Controllers.</summary>
@@ -46,30 +46,33 @@ namespace Component.As.Service
 
         /// <summary>Enable type <typeparamref name="TComponent"/> to be served as Controllers.</summary>
         /// <param name="app"></param>
+        /// <param name="routeMapping">Optional: override the <see cref="DefaultComponentAsServiceRouteMapping"/></param>
         /// <typeparam name="TComponent">A component Type to be served by the web application</typeparam>
         /// <returns><paramref name="app"/></returns>
         public static IApplicationBuilder 
-            UseComponentAsService<TComponent>(this IApplicationBuilder app)
+            UseComponentAsService<TComponent>(this IApplicationBuilder app, Action<IRouteBuilder> routeMapping=null)
                 => UseAsAController(app, typeof(TComponent).GetTypeInfo());
 
         /// <summary>Enable types <typeparamref name="TComponent1"/> ... <typeparamref name="TComponent2"/>  to be served as Controllers.</summary>
         /// <param name="app"></param>
+        /// <param name="routeMapping">Optional: override the <see cref="DefaultComponentAsServiceRouteMapping"/></param>
         /// <typeparam name="TComponent1">A component Type to be served by the web application</typeparam>
         /// <typeparam name="TComponent2">A component Type to be served by the web application</typeparam>
         /// <returns><paramref name="app"/></returns>
         public static IApplicationBuilder 
-            UseComponentAsService<TComponent1,TComponent2>(this IApplicationBuilder app)
+            UseComponentAsService<TComponent1,TComponent2>(this IApplicationBuilder app, Action<IRouteBuilder> routeMapping=null)
             => UseAsAController(app, typeof(TComponent1).GetTypeInfo(),typeof(TComponent2).GetTypeInfo());
 
         /// <summary>Enable types <typeparamref name="TComponent1"/> ... <typeparamref name="TComponent3"/>  to be served as Controllers.</summary>
         /// <param name="app"></param>
+        /// <param name="routeMapping">Optional: override the <see cref="DefaultComponentAsServiceRouteMapping"/></param>
         /// <typeparam name="TComponent1">A component Type to be served by the web application</typeparam>
         /// <typeparam name="TComponent2">A component Type to be served by the web application</typeparam>
         /// <typeparam name="TComponent3">A component Type to be served by the web application</typeparam>
         /// <returns><paramref name="app"/></returns>
         public static IApplicationBuilder 
-            UseComponentAsService<TComponent1,TComponent2, TComponent3>(this IApplicationBuilder app)
-            => UseAsAController(app, typeof(TComponent1).GetTypeInfo(),typeof(TComponent2).GetTypeInfo(),typeof(TComponent3).GetTypeInfo());
+            UseComponentAsService<TComponent1,TComponent2, TComponent3>(this IApplicationBuilder app, Action<IRouteBuilder> routeMapping=null)
+            => UseAsAController(app, routeMapping, typeof(TComponent1).GetTypeInfo(),typeof(TComponent2).GetTypeInfo(),typeof(TComponent3).GetTypeInfo());
 
        
         /// <summary>Enable types <paramref name="moreControllers"/> to be served as Controllers.</summary> using the
@@ -79,31 +82,28 @@ namespace Component.As.Service
         /// <returns><paramref name="app"/></returns>
         public static IApplicationBuilder UseAsAController(this IApplicationBuilder app, params TypeInfo[] moreControllers)
         {
-            app.UseMvc(routes =>
-            {
-                routes.MapRoute(
-                    name: "ComponentAsService",
-                    template: "{controller}/{action}");
-            });
-            app.ApplicationServices
-               .GetService<AnythingCanBeAControllerFeatureProvider>()
-               .Add(moreControllers);
-            return app;
+            return app.UseAsAController(DefaultComponentAsServiceRouteMapping, moreControllers);
         }
 
         /// <summary>Enable types <paramref name="moreControllers"/> to be served as Controllers at the
-        /// route specified by <paramref name="configureRouteForComponentAsService"/></summary>
+        /// route specified by <paramref name="routeMapping"/></summary>
         /// <param name="app"></param>
-        /// <param name="configureRouteForComponentAsService"></param>
+        /// <param name="routeMapping">If this is <c>null</c> then <see cref="DefaultComponentAsServiceRouteMapping"/> will be used.</param>
         /// <param name="moreControllers"></param>
         /// <returns><paramref name="app"/></returns>
-        public static IApplicationBuilder UseAsAController(this IApplicationBuilder app, Action<IRouteBuilder> configureRouteForComponentAsService,  params TypeInfo[] moreControllers)
+        public static IApplicationBuilder UseAsAController(this IApplicationBuilder app, Action<IRouteBuilder> routeMapping,  params TypeInfo[] moreControllers)
         {
-            app.UseMvc(configureRouteForComponentAsService);
-            app.ApplicationServices
-                .GetService<AnythingCanBeAControllerFeatureProvider>()
-                .Add(moreControllers);
+            app.UseMvc(routeMapping);
+            var acbCFP=app.ApplicationServices.GetService<AnythingCanBeAControllerFeatureProvider>();
+            acbCFP.Add(moreControllers);
+            acbCFP.Add(typeof(ComponentAsServiceDiagnostics).GetTypeInfo());
             return app;
         }
-    }
+
+        /// <summary>
+        /// The default route mapping is <c>routes => routes.MapRoute(name: "ComponentAsService",template: "{controller}/{action}")</c>
+        /// </summary>
+        public static readonly Action<IRouteBuilder> DefaultComponentAsServiceRouteMapping = 
+            routes => routes.MapRoute(name: "ComponentAsService",template: "{controller}/{action}");
+   }
 }
