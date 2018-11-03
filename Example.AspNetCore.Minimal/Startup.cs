@@ -2,7 +2,6 @@
 using Component.As.Service;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -29,6 +28,15 @@ namespace Example.AspNetCore.Empty
                 .UseMiddleware<RouteDebuggingLogger>();
         }
     }
+    
+    public class HomeController : Controller
+    {
+        public IActionResult Index()
+            => Content("<h2>HomeController/Index</h2>","text/html");
+        
+        public IActionResult Index(string a) 
+            => Content("<h2>HomeController/Index</h2><p>You said a=" + a +"</p>", "text/html");
+    }    
 
     public class AController : Controller
     {

@@ -10,21 +10,26 @@ namespace Component.As.Service.Specs
     public class StandardMvcBehaviourIsNotBrokenSpecs
     {
         [Theory]
-        [InlineData("/", "Home Page")]
-        [InlineData("/Home", "Home Page")]
-        [InlineData("/Home/Index", "Home Page")]
-        [InlineData("/Home/Privacy", "<p>Use this page to detail your site's privacy policy.</p>")]
-        public async Task RoutesInTheAspNetCoreMvcTemplateWorkAsExpected(string url, string expectedSnippet)
-        {
+        [InlineData("/")]
+        [InlineData("/Home")]
+        [InlineData("/Home/Index")]
+        [InlineData("/Home/Index?a=1")]
+        public async Task DefaultMvcRoutingWorksAsExpected(string url)
+        {            
+            var expected = url.Contains("?a=1") 
+                ? new HomeController().Index(1)
+                : new HomeController().Index();
+            
             var stringResult = await (await client.GetAsync(url)).Content.ReadAsStringAsync();
-
             Console.WriteLine(stringResult);
-            stringResult.ShouldContain(expectedSnippet);
+            
+            stringResult.ShouldContain(expected);
         }
+        
         
         public StandardMvcBehaviourIsNotBrokenSpecs()
             => client
-                   = new TestServer(Program.CreateWebHostBuilder(new string[0]))
+                   = new TestServer(ProgramAndStartup.CreateWebHostBuilder(new string[0]))
                      .CreateClient()
                      .With(c => c.BaseAddress = new Uri("https://localhost"));
 

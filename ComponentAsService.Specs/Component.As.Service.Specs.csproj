@@ -18,7 +18,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ComponentAsService2\Component.As.Service.csproj" />
+      <ProjectReference Include="..\AspNetCore.RouteDebuggingLogger.Middleware\AspNetCore.Mvc.Routes.DebuggingLoggerMiddleware.csproj" />
+      <ProjectReference Include="..\ComponentAsService\Component.As.Service.csproj" />
     </ItemGroup>
 
 </Project>

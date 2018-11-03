@@ -1,3 +1,5 @@
+using System.Linq;
+using System.Reflection;
 using Component.As.Service.Pieces;
 
 namespace Component.As.Service
@@ -8,6 +10,18 @@ namespace Component.As.Service
     /// </summary>
     public class ComponentAsServiceDiagnostics
     {
+        public string Index() 
+            => string.Join(
+                 "\r\n",
+                 typeof(ComponentAsServiceDiagnostics)
+                    .GetMethods(BindingFlags.Instance |BindingFlags.Public)
+                    .Select(
+                            m=> (m.ReturnParameter?.ParameterType.Name) + " " + m.Name 
+                              + "(" + 
+                                string.Join(",", 
+                                            m.GetParameters()
+                                             .Select(p=>p.ParameterType.Name + " " + p.Name))
+                              + ")"));
         public bool   And(bool a, bool b) => a && b;
         public int    Add(int a, int b) => a +b;
         public int    Add(int a, int b, int c) => a +b +c;

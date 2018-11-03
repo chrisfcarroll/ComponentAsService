@@ -30,7 +30,7 @@ namespace Component.As.Service
         /// <returns><paramref name="mvcBuilder"/></returns>
         public static IMvcBuilder AddComponentAsService(this IMvcBuilder mvcBuilder, params TypeInfo[] componentTypesToServe)
         {
-            mvcBuilder.AddApplicationPart(typeof(ComponentAsServiceDiagnostics).Assembly);
+            mvcBuilder.AddApplicationPart(typeof(ComponentAsServiceExtensions).Assembly);
             mvcBuilder.AddAnythingCanBeAController(componentTypesToServe);
             mvcBuilder.Services.AddFinerGrainedActionSelector();            
             return mvcBuilder;

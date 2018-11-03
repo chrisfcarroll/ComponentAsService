@@ -11,7 +11,7 @@ echo @'
 #vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 # Bash Start -----------------------------------------------------------
 
-dotnet test --no-restore  ./ComponentAsService2.Specs
+dotnet test --no-restore  ./ComponentAsService.Specs
 
 if [[ $? -eq 0 ]] ; then 
 
@@ -36,7 +36,7 @@ echo > /dev/null <<"out-null" ###
 
 function summarisePendingChange {   return ($raw= $(git diff --cached --stat -U1))  }
 
-dotnet test --no-restore  .\ComponentAsService2.Specs\ 
+dotnet test --no-restore  .\ComponentAsService.Specs\ 
 
 if($?){ 
 

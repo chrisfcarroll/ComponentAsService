@@ -72,7 +72,7 @@ namespace Component.As.Service.Specs
 
         public RoutingSpecs()
             => client
-                   = new TestServer(Program.CreateWebHostBuilder(new string[0]))
+                   = new TestServer(ProgramAndStartup.CreateWebHostBuilder(new string[0]))
                      .CreateClient()
                      .With(c => c.BaseAddress = new Uri("https://localhost"));
 
