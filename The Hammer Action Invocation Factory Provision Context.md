@@ -1,13 +1,10 @@
-I find that AspNetCore.Mvc has carefully avoided the swirling mad vortex of the
-HammerFactoryFactory pattern by using HammerFactoryProviders instead.
+I find that AspNetCore.Mvc has carefully avoided the swirling vortex of madness that is
+the HammerFactoryFactory pattern by using HammerFactoryProviders instead.
 
-And, for good measure, carefully placed the HammerFactoryProvider in a
-HammerActionInvokerProvider.
+And carefully placed the HammerFactoryProvider in a HammerActionInvokerProvider.
 
 All good hammer action invocation factory provision requires a context, so it
 goes like this:
-
- 
 
 If
 
