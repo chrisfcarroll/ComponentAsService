@@ -6,7 +6,8 @@
     <AssemblyFileVersion>1.0.0.0</AssemblyFileVersion>
     <PackageVersion>1.0.0.0</PackageVersion>
     <Title>AspNetCore.Mvc.Routes.DebuggingLoggerMiddleware : Simple Route Debugging to your Logger </Title>
-    <PackageDescription><![CDATA[Add RouteDebuggingLogger to your AspNetCore app:
+    <PackageDescription><![CDATA[Add RouteDebuggingLogger to your AspNetCore app and behold in relieve as it explains to your Logger what routes AspNetCore.Mvc has identified.
+
 ```
 public void Configure(IApplicationBuilder app, IHostingEnvironment env)
 {
@@ -23,7 +24,24 @@ public void Configure(IApplicationBuilder app, IHostingEnvironment env)
 }
 
 ```
-And behold in relieve as it explains to your Logger what routes AspNetCore.Mvc has identified.
+Example output:
+```
+info: AspNetCore.Mvc.Routes.DebuggingLoggerMiddleware.RouteDebuggingLogger[0]
+      Microsoft.AspNetCore.Mvc.Internal.ActionDescriptorCollectionProvider.ActionDescriptors.Version=0. Actions.Count=13
+info: AspNetCore.Mvc.Routes.DebuggingLoggerMiddleware.RouteDebuggingLogger[0]
+      Action: Example.AspNetCore.Empty.HomeController.Index (Example.AspNetCore.Minimal) Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor
+      Constraints: null
+      AttributeRouteInfo : 
+      BoundProperties : []
+      FilterDescriptors : [{"FilterType":"Microsoft.AspNetCore.Mvc.Internal.ControllerActionFilter","Order":-2147483648,"Scope":20},{"FilterType":"Microsoft.AspNetCore.Mvc.ViewFeatures.SaveTempDataAttribute","Order":-2147483548,"Scope":10},{"FilterType":"Microsoft.AspNetCore.Mvc.ModelBinding.UnsupportedContentTypeFilter","Order":0,"Scope":10}]
+      Parameters : []
+      Properties : {}
+      RouteValues : {"action":"Index","controller":"Home"}
+      Timings in milliseconds to inspect and format each attribute: Name:0, Constraints:23, AttributeRouteInfo:23, BoundProperties:41, FilterDescriptors:60, Parameters:63, Properties:67, RouteValues:69
+
+... etc ...
+
+```
 
 Set `RouteDebuggingLogger.LogLevel` if you must change the LogLevel.
 ]]></PackageDescription>

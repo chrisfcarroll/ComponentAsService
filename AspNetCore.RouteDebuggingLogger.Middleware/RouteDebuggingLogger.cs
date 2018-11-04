@@ -82,22 +82,22 @@ namespace AspNetCore.Mvc.Routes.DebuggingLoggerMiddleware
             return string.Format(
                 string.Join(System.Environment.NewLine,
                             "Action: {0} {1}",
+                            "RouteValues : {8}",
                             "Constraints: {2}",
                             "AttributeRouteInfo : {3}",
                             "BoundProperties : {4}",
                             "FilterDescriptors : {5}",
                             "Parameters : {6}",
                             "Properties : {7}",
-                            "RouteValues : {8}",
-                            "Timings in milliseconds to inspect and format each attribute: {9}"),
+                            "Cumulative time in milliseconds to inspect and format each attribute: {9}"),
                 displayName, a.ToString(),
+                routeValues,
                 constraints,
                 attributeRouteInfo,
                 boundProperties,
                 filterDescriptors,
                 parameters,
                 properties,
-                routeValues,
                 string.Join(", ", timings)
                 );
         }

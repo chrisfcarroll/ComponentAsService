@@ -6,12 +6,10 @@
     <AssemblyFileVersion>1.0.0.0</AssemblyFileVersion>
     <PackageVersion>1.0.0.0</PackageVersion>
     <Title>Component.As.Service : Serves your Component. On the web. As a Service.</Title>
-    <PackageDescription><![CDATA[Add Component.As.Service to your AspNetCore app in the usual way:
+    <PackageDescription><![CDATA[Add Component.As.Service to your AspNetCore app in the usual way and behold as your application component is exposed to the world at `http://localhost:5000/MyApplicationComponent/MethodName?parameterA=a&parameterB=B`
 ```
 public class Startup
 {
-    // This method gets called by the runtime. Use this method to add services to the container.
-    // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
     public void ConfigureServices(IServiceCollection services)
     {
         services
@@ -19,7 +17,6 @@ public class Startup
             .AddComponentAsService();
     }
 
-    // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
     public void Configure(IApplicationBuilder app, IHostingEnvironment env)
     {
         app
@@ -28,21 +25,18 @@ public class Startup
     }
 }
 ```
-And behold as your application component is exposed to the world at 
-`http://localhost:5000/MyApplicationComponent/MethodName?parameterA=a&parameterB=B`
-
 ### Q&A
 
-* Really?
-Yes really. This is very much a 'Keep it Simple' offer though.
-
-* And form post?
-Yes. Anything that Mvc can normally deliver to an Action by the magic of ModelBinding can
-be delivered to your component methods.
+* And form post and json post and complex objects?
+Yes. Anything that Mvc can normally deliver to an Action by the magic of ModelBinding will
+be delivered to your component method.
 
 * What about Route Constraints and REST and things?
-For sophisticated HTTP-specific concerns, write a traditional MVC `Controller` which
+For sophisticated HTTP-specific concerns, write a traditional MVC Controller which
 takes your Component as a dependency.
+
+* Really?
+Yes really. This is very much a 'Keep it Simple' offer.
 ]]></PackageDescription>
     <PackageReleaseNotes>ChangeLog
       --------
