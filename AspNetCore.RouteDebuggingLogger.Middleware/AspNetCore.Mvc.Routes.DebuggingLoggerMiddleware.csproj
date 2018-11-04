@@ -2,6 +2,43 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <AssemblyFileVersion>1.0.0.0</AssemblyFileVersion>
+    <PackageVersion>1.0.0.0</PackageVersion>
+    <Title>AspNetCore.Mvc.Routes.DebuggingLoggerMiddleware : Simple Route Debugging to your Logger </Title>
+    <PackageDescription><![CDATA[Add RouteDebuggingLogger to your AspNetCore app:
+```
+public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+{
+    if (env.IsDevelopment())
+    {
+        app
+           .UseDeveloperExceptionPage()
+           .UseMiddleware<RouteDebuggingLogger>();
+    }
+    app
+       .UseMvcWithDefaultRoute()
+       .UseComponentAsService()
+       .UseKitchenSink();
+}
+
+```
+And behold in relieve as it explains to your Logger what routes AspNetCore.Mvc has identified.
+
+Set `RouteDebuggingLogger.LogLevel` if you must change the LogLevel.
+]]></PackageDescription>
+    <PackageReleaseNotes>ChangeLog
+      --------
+      1.0.0.0 Part of Component.As.Service
+    </PackageReleaseNotes>
+    <Copyright>(c) Chris F. Carroll, 2018</Copyright>
+    <Authors>Chris F Carroll</Authors>
+    <Owners>Chris F Carroll</Owners>
+    <PackageProjectUrl>https://github.com/chrisfcarroll/ComponentAsService</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/chrisfcarroll/ComponentAsService</RepositoryUrl>
+    <RequireLicenseAcceptance>false</RequireLicenseAcceptance>
+    <IncludeSymbols>true</IncludeSymbols>
+    <PackageTags>aspnetcore;aspnetcoremvc;debugging;routing;logging</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

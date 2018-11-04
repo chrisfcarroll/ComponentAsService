@@ -2,7 +2,60 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-  </PropertyGroup>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <AssemblyFileVersion>1.0.0.0</AssemblyFileVersion>
+    <PackageVersion>1.0.0.0</PackageVersion>
+    <Title>Component.As.Service : Serves your Component. On the web. As a Service.</Title>
+    <PackageDescription><![CDATA[Add Component.As.Service to your AspNetCore app in the usual way:
+```
+public class Startup
+{
+    // This method gets called by the runtime. Use this method to add services to the container.
+    // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services
+            /*  .AddMvc() here if you required MvcOptions */
+            .AddComponentAsService();
+    }
+
+    // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+    public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+    {
+        app
+           /* .UseMvc() here if you require custom Mvc configuration */
+           .UseComponentAsService<MyApplicationComponent>();
+    }
+}
+```
+And behold as your application component is exposed to the world at 
+`http://localhost:5000/MyApplicationComponent/MethodName?parameterA=a&parameterB=B`
+
+### Q&A
+
+* Really?
+Yes really. This is very much a 'Keep it Simple' offer though.
+
+* And form post?
+Yes. Anything that Mvc can normally deliver to an Action by the magic of ModelBinding can
+be delivered to your component methods.
+
+* What about Route Constraints and REST and things?
+For sophisticated HTTP-specific concerns, write a traditional MVC `Controller` which
+takes your Component as a dependency.
+]]></PackageDescription>
+    <PackageReleaseNotes>ChangeLog
+      --------
+      1.0.0.0 Component.As.Service
+    </PackageReleaseNotes>
+    <Copyright>(c) Chris F. Carroll, 2018</Copyright>
+    <Authors>Chris F Carroll</Authors>
+    <Owners>Chris F Carroll</Owners>
+    <PackageProjectUrl>https://github.com/chrisfcarroll/ComponentAsService</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/chrisfcarroll/ComponentAsService</RepositoryUrl>
+    <RequireLicenseAcceptance>false</RequireLicenseAcceptance>
+    <IncludeSymbols>true</IncludeSymbols>
+    <PackageTags>aspnetcore;aspnetcoremvc;debugging;routing;logging</PackageTags>  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.1.3" />
