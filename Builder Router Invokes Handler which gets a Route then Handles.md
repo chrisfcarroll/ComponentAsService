@@ -1,14 +1,17 @@
-RouteContext 
-	requires
-		Inject HttpContext
-		Populate RouteData
-			MvcAttributeRouteHandler.RouteAsync populates RouteData.Values actionDescriptor.RouteValues
-			MvcRouteHandler.RouteAsync doesnt
+RouteContext requires
 
+Inject HttpContext
 
+Populate RouteData
+
+MvcAttributeRouteHandler.RouteAsync populates RouteData.Values
+actionDescriptor.RouteValues
+
+MvcRouteHandler.RouteAsync doesnt
 
 Microsoft.AspNetCore.Builder.RouterMiddleWare.Invoke(HttpContext)
-```
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   public async Task Invoke(HttpContext httpContext)
   {
     RouteContext context = new RouteContext(httpContext);
@@ -28,21 +31,21 @@ Microsoft.AspNetCore.Builder.RouterMiddleWare.Invoke(HttpContext)
       await context.Handler(context.HttpContext);
     }
   }
-```
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Mvc(A)RouteHandler
-	uses a
-		IActionInvokerFactory (and a IActionContextAccessor which can be null)
-```		
+Mvc(A)RouteHandler uses a IActionInvokerFactory (and a IActionContextAccessor
+which can be null)
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   context.Handler = (HttpContext c) =>
   {
       var routeData = c.GetRouteData();
-      	// routeData is often just 2 keys: action, controller
+        // routeData is often just 2 keys: action, controller
 
       var actionContext = new ActionContext(context.HttpContext, routeData, actionDescriptor);
-      	// Action descriptor is already selected by calling _actionSelector.SelectBestCandidate
-      	// inside the same RouteAsync() method, a few lines above,
-      	// before the handler is called.
+        // Action descriptor is already selected by calling _actionSelector.SelectBestCandidate
+        // inside the same RouteAsync() method, a few lines above,
+        // before the handler is called.
 
       if (_actionContextAccessor != null)
       {
@@ -59,13 +62,13 @@ Mvc(A)RouteHandler
 
       return invoker.InvokeAsync();
   };
-```
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 `var invoker = _actionInvokerFactory.CreateInvoker(actionContext);` :
 
 ActionInvokerFactory
 
-```
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     public class ActionInvokerFactory : IActionInvokerFactory
     {
         private readonly IActionInvokerProvider[] _actionInvokerProviders;
@@ -92,20 +95,19 @@ ActionInvokerFactory
             return context.Result;
         }
     }
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-```
+DI provides IEnumerable which includes the
 
-DI provides IEnumerable<IActionInvokerProvider> which includes the
+ControllerActionInvokerProvider
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DI provides 
+    IOptions<MvcOptions> optionsAccessor
+        which provides the _valueProviderFactories (4 of them : Form,Route,QueryString,JQueryForm)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ControllerActionInvokerProvider 
-
-	DI provides 
-		IOptions<MvcOptions> optionsAccessor
-			which provides the _valueProviderFactories (4 of them : Form,Route,QueryString,JQueryForm)
-
-
-```
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 public void OnProvidersExecuting(ActionInvokerProviderContext context /* wraps the actionContext */)
 {
     if (context == null)
@@ -133,22 +135,24 @@ public void OnProvidersExecuting(ActionInvokerProviderContext context /* wraps t
         context.Result = invoker;
     }
 }
-```
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ControllerActionInvokerCache 
+ControllerActionInvokerCache
 
-	DI provides 
-	          IActionDescriptorCollectionProvider collectionProvider,
-            ParameterBinder parameterBinder,
-            IModelBinderFactory modelBinderFactory,
-            IModelMetadataProvider modelMetadataProvider,
-            IEnumerable<IFilterProvider> filterProviders,
-            IControllerFactoryProvider factoryProvider,
-            IOptions<MvcOptions> mvcOptions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DI provides 
+          IActionDescriptorCollectionProvider collectionProvider,
+        ParameterBinder parameterBinder,
+        IModelBinderFactory modelBinderFactory,
+        IModelMetadataProvider modelMetadataProvider,
+        IEnumerable<IFilterProvider> filterProviders,
+        IControllerFactoryProvider factoryProvider,
+        IOptions<MvcOptions> mvcOptions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 GetCachedResult(ControllerContext )
 
-```
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   var parameterDefaultValues = ParameterDefaultValues
       .GetParameterDefaultValues(actionDescriptor.MethodInfo);
 
@@ -176,51 +180,39 @@ GetCachedResult(ControllerContext )
       objectMethodExecutor,
       actionMethodExecutor);
   cacheEntry = cache.Entries.GetOrAdd(actionDescriptor, cacheEntry);
-```
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	ControllerBinderDelegateProvider.CreateBinderDelegate is public static.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ControllerBinderDelegateProvider.CreateBinderDelegate is public static.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ControllerBinderDelegate CreateBinderDelegate(
-						ParameterBinder parameterBinder, <----  Came from DI
-            IModelBinderFactory modelBinderFactory, <----  Came from DI
-            IModelMetadataProvider modelMetadataProvider, <----  Came from DI
-            ControllerActionDescriptor actionDescriptor, 
-            			^-- Came from the ControllerContext 
-            			         from ActionInvokerProviderContext
-            			         from ActionContext
-            			         from the ActionDescriptoer 
-            			         selected by calling actionSelector.SelectBestCandidate()
-            			         during RouteHandlerRouteAsync()
-            			         before creating the Handler
-            MvcOptions mvcOptions <----  Came from DI
-            )
+ControllerBinderDelegate CreateBinderDelegate( ParameterBinder parameterBinder,
+\<---- Came from DI IModelBinderFactory modelBinderFactory, \<---- Came from DI
+IModelMetadataProvider modelMetadataProvider, \<---- Came from DI
+ControllerActionDescriptor actionDescriptor, \^-- Came from the
+ControllerContext from ActionInvokerProviderContext from ActionContext from the
+ActionDescriptoer selected by calling actionSelector.SelectBestCandidate()
+during RouteHandlerRouteAsync() before creating the Handler MvcOptions
+mvcOptions \<---- Came from DI )
 
-calls 
-```
+calls
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 private static BinderItem[] GetParameterBindingInfo(
             IModelBinderFactory modelBinderFactory, <----  Came from DI
             IModelMetadataProvider modelMetadataProvider, <----  Came from DI
             ControllerActionDescriptor actionDescriptor, 
-            		^-- Came from calling actionSelector.SelectBestCandidate()
+                    ^-- Came from calling actionSelector.SelectBestCandidate()
             MvcOptions mvcOptions  <----  Came from DI
             )
-	)
+    )
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-```
+ActionContext= { HttpContext \<--From RC RouteData \<-- from RC ActionDescriptor
+\<-- given ModelState= new }
 
-ActionContext= {
-	HttpContext <--From RC
-  RouteData <-- from RC
-  ActionDescriptor <-- given
-  ModelState= new 
-}
-
-
- cc = new ControllerContext(ActionContext){
- 	ValueProviderFactories 
- 	= new CopyOnWriteList<IValueProviderFactory>( 
- 					MvcOptions.ValueProviderFactories.ToArray());
-  ModelState.MaxAllowedErrors= MvcOptions.MaxModelValidationErrors
+cc = new ControllerContext(ActionContext){ ValueProviderFactories = new
+CopyOnWriteList( MvcOptions.ValueProviderFactories.ToArray());
+ModelState.MaxAllowedErrors= MvcOptions.MaxModelValidationErrors
 
 }
-
